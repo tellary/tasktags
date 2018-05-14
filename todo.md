@@ -1,2 +1,0 @@
-- 20180505.1: Covert into Toggl CSV format
-- 20180506.1: Detect current task state on start/stop
