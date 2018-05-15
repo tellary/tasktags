@@ -28,8 +28,8 @@
   "Task & time tracking in Markdown document with tags"
   :lighter " ttags"
   :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "M-4 s") 'task-start)
-            (define-key map (kbd "M-4 t") 'task-stop)
+            (define-key map (kbd "M-o t") 'task-start)
+            (define-key map (kbd "M-o h") 'task-stop)
             map)
   )
 
