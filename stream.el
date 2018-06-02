@@ -1,4 +1,4 @@
-(defun streamp(object)
+(defun streamp (object)
   "Return t if OBJECT is a stream.
 Which means it has CAR, it has CDR and they both are functions."
   (and
@@ -9,22 +9,22 @@ Which means it has CAR, it has CDR and they both are functions."
    t)
   )
 
-(defun stream-car(stream)
+(defun stream-car (stream)
   "Returns head of the STREAM.
 It's analogous to `car' on regular `list'"
   (funcall (cdr (assoc 'car stream)) stream)
   )
 
-(defun stream-cdr(stream)
+(defun stream-cdr (stream)
   "Returns tail of the STREAM.
 It's analogous to `cdr' on regular `list'"
   (funcall (cdr (assoc 'cdr stream)) stream)
   )
     
-(defun stream--list-stream-list(stream)
+(defun stream--list-stream-list (stream)
   (cdr (assoc 'list stream)))
 
-(defun stream-from-list(l)
+(defun stream-from-list (l)
   "Constructs a stream from L.
 Returned result conforms to `stream-listp'."
   (if (eq nil l)
@@ -45,7 +45,7 @@ Returned result conforms to `stream-listp'."
     )
   )
 
-(defun stream-listp(object)
+(defun stream-listp (object)
   "Checks if OBJECT was constructed by `stream-from-list'.
 It means the OBJECT is a stream (see `streamp') and
 it has LIST property which is `list'."
@@ -56,7 +56,7 @@ it has LIST property which is `list'."
    )
   )
 
-(defun stream-foldl(fn left stream)
+(defun stream-foldl (fn left stream)
   "Folds a stream STREAM left to right.
 See `streamp' for definitian of stream."
   (if (eq nil stream)
@@ -71,5 +71,26 @@ See `streamp' for definitian of stream."
       )
     )
   )
+
+(defun stream-foldr (fn right stream)
+  "Folds a stream STREAM right to left.
+See `streamp' for definitian of stream."
+  (if (eq nil stream)
+      right
+    (let ((item (stream-car stream)))
+      (funcall
+       fn
+       item
+       (stream-foldr fn right (stream-cdr stream)))
+      )
+    )
+  )
+
+(defun stream-to-list (stream)
+  "Collects stream into list.
+See `streamp' for definitian of stream."
+  (stream-foldr 'cons () stream)
+  )
+
 
 (provide 'stream)

@@ -50,3 +50,36 @@
     (should (equal (stream-listp s) t))
     )
   )
+
+(ert-deftest stream-test-foldr-sum ()
+  (should
+   (=
+    (stream-foldr '+ 0 (stream-from-list '(1 2 3)))
+    6)
+   )
+  )
+
+(ert-deftest stream-test-foldr-list ()
+  (should
+   (equal
+    (stream-foldr 'list 0 (stream-from-list '(1 2 3)))
+    '(1 (2 (3 0))))
+   )
+  )
+
+(ert-deftest stream-test-foldr-collect ()
+  (should
+   (equal
+    (stream-foldr
+     'cons
+     () (stream-from-list '(1 2 3)))
+    '(1 2 3))
+   )
+  )
+
+(ert-deftest stream-test-from-to-list ()
+  (let ((stream (stream-from-list '(1 2 3))))
+    (should
+     (equal (stream-to-list stream) '(1 2 3)))
+    )
+  )
