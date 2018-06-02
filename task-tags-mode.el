@@ -182,6 +182,34 @@ Search for hext task otherwise.
    (nth 1 task))
   )
 
+(defun task-stream--car (stream)
+  (cdr (assoc 'task stream)))
+
+(defun task-stream--cdr (stream)
+  (task-stream-from-task
+   (task-next
+    (task-stream--car stream)))
+  )
+
+(defun task-stream-from-task (task)
+  "Creates a stream of tasks starting at the given TASK.
+`task-next' is used to build the stream."
+  (if (eq nil task)
+      nil
+    (list
+     (cons 'car 'task-stream--car)
+     (cons 'cdr 'task-stream--cdr)
+     (cons 'task task))
+    )
+  )
+
+(defun task-stream-from-first-in-buffer ()
+  "Creates a stream of tasks starting from the first task in the buffer.
+It uses `task-first-in-buffer' to find the first task and
+`task-stream-from-task' to build the stream."
+  (task-stream-from-task (task-first-in-buffer))
+  )
+
 (define-minor-mode task-tags-mode
   "Task & time tracking in Markdown document with tags"
   :lighter " ttags"

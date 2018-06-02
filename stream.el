@@ -21,8 +21,16 @@ It's analogous to `cdr' on regular `list'"
   (funcall (cdr (assoc 'cdr stream)) stream)
   )
     
-(defun stream--list-stream-list (stream)
+(defun stream-list--list (stream)
   (cdr (assoc 'list stream)))
+
+(defun stream-list--car (stream)
+  (car (stream-list--list stream)))
+
+(defun stream-list--cdr (stream)
+  (stream-from-list
+   (cdr
+    (stream-list--list stream))))
 
 (defun stream-from-list (l)
   "Constructs a stream from L.
@@ -30,18 +38,9 @@ Returned result conforms to `stream-listp'."
   (if (eq nil l)
       nil
     (list
-     (cons
-      'car
-      (lambda (stream)
-        (car (stream--list-stream-list stream))))
-     (cons
-      'cdr
-      (lambda (stream)
-        (stream-from-list
-         (cdr
-          (stream--list-stream-list stream)))))
-     (cons 'list l)
-     )
+     (cons 'car 'stream-list--car)
+     (cons 'cdr 'stream-list--cdr)
+     (cons 'list l))
     )
   )
 

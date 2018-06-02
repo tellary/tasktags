@@ -1,12 +1,16 @@
 (require 'task-tags-mode)
 
+(defun task-test-md ()
+  (find-file "test.md")
+  (switch-to-buffer "test.md")
+  (should
+   (equal (buffer-name) "test.md"))
+  (markdown-syntax-propertize (buffer-end -1) (buffer-end 1))
+  )
+
 (ert-deftest task-test-first-in-buffer ()
   (save-excursion
-    (find-file "test.md")
-    (switch-to-buffer "test.md")
-    (should
-     (equal (buffer-name) "test.md"))
-    (markdown-syntax-propertize (buffer-end -1) (buffer-end 1))
+    (task-test-md)
     (let ((test (task-first-in-buffer)))
       (should
        (equal test '("2018-May-03" "Project A" "Task A1")))
@@ -35,5 +39,23 @@
           )
         )
       )
+    )
+  )
+
+(ert-deftest task-stream-test-collect()
+  (save-excursion
+    (task-test-md)
+    (should
+     (equal
+      (stream-to-list (task-stream-from-first-in-buffer))
+      '(
+        ("2018-May-03" "Project A" "Task A1")
+        ("2018-May-03" "Project A" "Task A2")
+        ("2018-May-03" "Project B" "Task B2")
+        ("2018-May-03" "Project B" "Task B3")
+        ("2018-May-06" "Project A" "Task A2")
+        ("2018-May-06" "Project A" "Task A3"))
+      )
+     )
     )
   )
