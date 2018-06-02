@@ -1,6 +1,7 @@
 # 2018-May-03
 
-## Project A
+Project A
+---------
 
 ### Task A1
 
@@ -8,9 +9,9 @@
 
 ## Project B
 
-## Task B2
+### Task B2
 
-## Task B3
+### Task B3
 
 # 2018-May-06
 
