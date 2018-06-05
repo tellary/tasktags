@@ -210,6 +210,100 @@ It uses `task-first-in-buffer' to find the first task and
   (task-stream-from-task (task-first-in-buffer))
   )
 
+(defun task-time-tag--next-regex ()
+  (when
+      (search-forward-regexp
+       "<task-\\(start\\|stop\\) +t=\"\\([^\"]+\\)\"/>" nil t)
+    (list
+     (equal "start" (match-string-no-properties 1))
+     (match-string-no-properties 2))
+    )
+  )
+
+(defun task-time-tag-from-task (task)
+  "Return time tag and context starting at a TASK.
+TASK is a list. Result conforms to `task-time-tag-and-ctxp'.
+The method creates time tag context from the TASK and
+returns result of the `task-time-tag-next' invocation."
+  (when task
+    (let ((p (point))
+          (next-task (task-next task))
+          (next-task-pos (point)))
+      (goto-char p)
+      (if next-task
+          (task-time-tag-next (list task next-task next-task-pos))
+        (task-time-tag-next (list task nil (buffer-end 1)))
+        )
+      )
+    )
+  )
+
+(defun task-time-tag-ctxp (OBJECT)
+  "Check if OBJECT is a time tag context.
+It is usable by `task-time-tag-next' function to find next time tag.
+Which is a list with
+
+1. The first element being a list representing a current task,
+2. The second element being a list representing the next task, and
+3. The third argument being an integer representing position of
+   the next task."
+  (and
+   (listp (nth 0 time-tag-ctx))
+   (listp (nth 1 time-tag-ctx))
+   (integerp (nth 2 time-tag-ctx)))
+  )
+
+(defun task-time-tag-assert-ctx (object)
+  "Error if OBJECT doesn't conform with `task-time-tag-ctxp'."
+  (unless (task-time-tag-ctxp object)
+    (error "Not task-time-tag-ctxp")
+    )
+  )
+
+(defun task-time-tagp (OBJECT)
+  "Check if OBJECT is a time tag.
+Which is a list with
+
+1. The first element being t for start tag and nil for stop tag, and
+2. The second element being a timestamp (a string currently)."
+  (and
+   (listp OBJECT)
+   (booleanp (nth 0 OBJECT))
+   (stringp (nth 1 OBJECT)))
+  )
+
+(defun task-time-tag-and-ctxp (OBJECT)
+  "Check if OBJECT is a time tag and context.
+Which is a list with
+
+1. The first element conforming to `task-time-tagp', and
+2. The rest of the list conforming to `task-time-tag-ctxp'."
+  )
+
+(defun task-time-tag-next (time-tag-ctx)
+    "Given TIME-TAG-CTX return the next time tag and context.
+TIME-TAG-CTX conforms to `task-time-tag-ctxp'.
+Result conforms to `task-time-tag-and-ctxp'."
+  (task-time-tag-assert-ctx time-tag-ctx)
+  (let ((next-task (nth 1 time-tag-ctx))
+        (next-task-pos (nth 2 time-tag-ctx)))
+    (let ((time-tag (task-time-tag--next-regex)))
+      (when time-tag
+        (if (< (point) next-task-pos)
+            (cons time-tag time-tag-ctx)
+          (goto-char next-task-pos)
+          (task-time-tag-from-task next-task)
+          )
+        )
+      )
+    )
+  )
+
+(defun task-time-tag-first-in-buffer ()
+  "Return first time tag in the current buffer."
+  (task-time-tag-from-task (task-first-in-buffer))
+  )
+
 (define-minor-mode task-tags-mode
   "Task & time tracking in Markdown document with tags"
   :lighter " ttags"

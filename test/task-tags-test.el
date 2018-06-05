@@ -42,7 +42,7 @@
     )
   )
 
-(ert-deftest task-stream-test-collect()
+(ert-deftest task-stream-test-collect ()
   (save-excursion
     (task-test-md)
     (should
@@ -57,5 +57,63 @@
         ("2018-May-06" "Project A" "Task A3"))
       )
      )
+    )
+  )
+
+(defun task-time-tag-should-equal
+    (tag expected-task expected-tag)
+  (should
+   (equal
+    (nth 1 tag)
+    expected-task))
+  (should
+   (equal
+    (car tag)
+    expected-tag))
+  )
+
+(ert-deftest task-time-tag-test-first-in-buffer ()
+  (save-excursion
+    (task-test-md)
+    (let ((t1 (task-time-tag-first-in-buffer)))
+      (task-time-tag-should-equal
+       t1
+       '("2018-May-06" "Project A" "Task A2")
+       '(t "20180506 12:20:54 -0700"))
+      (let ((t2 (task-time-tag-next (cdr t1))))
+        (task-time-tag-should-equal
+         t2
+         '("2018-May-06" "Project A" "Task A2")
+         '(nil "20180506 12:31:51 -0700"))
+        (let ((t3 (task-time-tag-next (cdr t2))))
+          (task-time-tag-should-equal
+           t3
+           '("2018-May-06" "Project A" "Task A2")
+           '(t "20180506 12:25:50 -0700"))
+          (let ((t4 (task-time-tag-next (cdr t3))))
+            (task-time-tag-should-equal
+             t4
+             '("2018-May-06" "Project A" "Task A2")
+             '(nil "20180506 12:41:18 -0700"))
+            (let ((t5 (task-time-tag-next (cdr t4))))
+              (task-time-tag-should-equal
+               t5
+               '("2018-May-06" "Project A" "Task A3")
+               '(t "20180506 09:00:02 -0700"))
+              (let ((t6 (task-time-tag-next (cdr t5))))
+                (task-time-tag-should-equal
+                 t6
+                 '("2018-May-06" "Project A" "Task A3")
+                 '(nil "20180506 11:05:00 -0700"))
+                (should
+                 (equal
+                  (task-time-tag-next (cdr t5))
+                  nil))
+                )
+              )
+            )
+          )
+        )
+      )
     )
   )
