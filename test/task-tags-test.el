@@ -117,3 +117,26 @@
       )
     )
   )
+
+(ert-deftest task-time-tag-stream-test-first-in-buffer ()
+  (save-excursion
+    (task-test-md)
+    (should
+     (equal
+      (stream-to-list (task-time-tag-stream-from-first-in-buffer))
+      '(((  t "20180506 12:20:54 -0700")
+         ("2018-May-06" "Project A" "Task A2"))
+        ((nil "20180506 12:31:51 -0700")
+         ("2018-May-06" "Project A" "Task A2"))
+        ((  t "20180506 12:25:50 -0700")
+         ("2018-May-06" "Project A" "Task A2"))
+        ((nil "20180506 12:41:18 -0700")
+         ("2018-May-06" "Project A" "Task A2"))
+        ((  t "20180506 09:00:02 -0700")
+         ("2018-May-06" "Project A" "Task A3"))
+        ((nil "20180506 11:05:00 -0700")
+         ("2018-May-06" "Project A" "Task A3")))
+      )
+     )
+    )
+  )

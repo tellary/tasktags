@@ -192,7 +192,7 @@ Search for hext task otherwise.
   )
 
 (defun task-stream-from-task (task)
-  "Creates a stream of tasks starting at the given TASK.
+  "Create a stream of tasks starting at the given TASK.
 `task-next' is used to build the stream."
   (if (eq nil task)
       nil
@@ -204,7 +204,7 @@ Search for hext task otherwise.
   )
 
 (defun task-stream-from-first-in-buffer ()
-  "Creates a stream of tasks starting from the first task in the buffer.
+  "Create a stream of tasks starting from the first task in the buffer.
 It uses `task-first-in-buffer' to find the first task and
 `task-stream-from-task' to build the stream."
   (task-stream-from-task (task-first-in-buffer))
@@ -248,9 +248,9 @@ Which is a list with
 3. The third argument being an integer representing position of
    the next task."
   (and
-   (listp (nth 0 time-tag-ctx))
-   (listp (nth 1 time-tag-ctx))
-   (integerp (nth 2 time-tag-ctx)))
+   (listp (nth 0 OBJECT))
+   (listp (nth 1 OBJECT))
+   (integerp (nth 2 OBJECT)))
   )
 
 (defun task-time-tag-assert-ctx (object)
@@ -278,6 +278,10 @@ Which is a list with
 
 1. The first element conforming to `task-time-tagp', and
 2. The rest of the list conforming to `task-time-tag-ctxp'."
+  (and
+   (listp OBJECT)
+   (task-time-tagp (car OBJECT))
+   (task-time-tag-ctxp (cdr OBJECT)))
   )
 
 (defun task-time-tag-next (time-tag-ctx)
@@ -302,6 +306,40 @@ Result conforms to `task-time-tag-and-ctxp'."
 (defun task-time-tag-first-in-buffer ()
   "Return first time tag in the current buffer."
   (task-time-tag-from-task (task-first-in-buffer))
+  )
+
+(defun task-time-tag-stream--car (stream)
+  (subseq 
+   (cdr (assoc 'tag-and-ctx stream))
+   0 2)
+  )
+
+(defun task-time-tag-stream--cdr (stream)
+  (task-time-tag-stream
+   (task-time-tag-next
+    (cdr (cdr (assoc 'tag-and-ctx stream)))))
+  )
+
+(defun task-time-tag-stream (tag-and-ctx)
+  "Create a stream of time tags starting from a TAG-AND-CTX.
+`task-time-tag-next' is used to build the stream.
+TAG-AND-CTX conforms to `task-time-tag-and-ctxp'."
+  (if (eq nil tag-and-ctx)
+      nil
+    (unless (task-time-tag-and-ctxp tag-and-ctx)
+      (error "tag-and-ctx must be task-time-tag-and-ctxp"))
+    (list
+     (cons 'car 'task-time-tag-stream--car)
+     (cons 'cdr 'task-time-tag-stream--cdr)
+     (cons 'tag-and-ctx tag-and-ctx))
+    )
+  )
+
+(defun task-time-tag-stream-from-first-in-buffer()
+  "Create a stream of time tags starting from the first tag in the buffer.
+It uses `task-time-tag-first-in-buffer' to find the first tag.
+It uses `task-time-tag-stream' to build the stream."
+  (task-time-tag-stream (task-time-tag-first-in-buffer))
   )
 
 (define-minor-mode task-tags-mode
