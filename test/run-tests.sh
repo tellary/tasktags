@@ -1,4 +1,4 @@
-emacs -batch -l ert \
+emacs -batch \
       -l ../stream.el \
       -l stream-test.el \
       -f package-initialize \

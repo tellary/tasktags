@@ -1,11 +1,20 @@
+(require 'ert)
 (require 'task-tags-mode)
 
-(defun task-test-md ()
-  (find-file "test.md")
-  (switch-to-buffer "test.md")
+(defun task-find-md-file(file)
+  (find-file file)
+  (switch-to-buffer file)
   (should
-   (equal (buffer-name) "test.md"))
+   (equal (buffer-name) file))
   (markdown-syntax-propertize (buffer-end -1) (buffer-end 1))
+  )
+
+(defun task-test-md ()
+  (task-find-md-file "test.md")
+  )
+
+(defun task-test-two-stops-md ()
+  (task-find-md-file "test_two_stops.md")
   )
 
 (ert-deftest task-test-first-in-buffer ()
@@ -74,7 +83,7 @@
 
 (ert-deftest task-time-tag-test-first-in-buffer ()
   (save-excursion
-    (task-test-md)
+    (task-test-two-stops-md)
     (let ((t1 (task-time-tag-first-in-buffer)))
       (task-time-tag-should-equal
        t1
@@ -120,7 +129,7 @@
 
 (ert-deftest task-time-tag-stream-test-first-in-buffer ()
   (save-excursion
-    (task-test-md)
+    (task-test-two-stops-md)
     (should
      (equal
       (stream-to-list (task-time-tag-stream-from-first-in-buffer))
@@ -138,5 +147,58 @@
          ("2018-May-06" "Project A" "Task A3")))
       )
      )
+    )
+  )
+
+(ert-deftest task-time-tag-and-task-test-time-lessp()
+  (let (
+        (tt1
+         '((t "20180506 12:20:54 -0700")
+           ("2018-May-06" "Project A" "Task A2")))
+        (tt2
+         '((nil "20180506 12:31:51 -0700")
+           ("2018-May-06" "Project A" "Task A2"))))
+    (should
+     (eq (task-time-tag-and-task-time-lessp tt1 tt2) t))
+    (should
+     (eq (task-time-tag-and-task-time-lessp tt2 tt1) nil))
+    )
+  )
+
+(ert-deftest task-time-entry-test()
+  (should
+   (equal
+    (task-time-entry
+     '((t "20180506 12:20:54 -0700")
+       ("2018-May-06" "Project A" "Task A2"))
+     '((nil "20180506 12:25:50 -0700")
+       ("2018-May-06" "Project A" "Task A2")))
+    '("20180506 12:20:54 -0700" "20180506 12:25:50 -0700" "Project A" "Task A2")
+    )
+   )
+  )
+
+(ert-deftest task-time-entry-test-from-tag-stream()
+  (save-excursion
+    (task-test-md)
+    (let ((entries-list
+           (task-time-entries-from-tag-stream
+            (task-time-tag-stream-from-first-in-buffer))))
+      (should
+       (equal
+        entries-list
+        '(
+          ("20180506 09:00:02 -0700"
+           "20180506 11:05:00 -0700"
+           "Project A" "Task A3")
+          ("20180506 12:20:54 -0700"
+           "20180506 12:25:50 -0700"
+           "Project A" "Task A2")
+          ("20180506 12:31:51 -0700"
+           "20180506 12:41:18 -0700"
+           "Project A" "Task A2"))
+        )
+       )
+      )
     )
   )

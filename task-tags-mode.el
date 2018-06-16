@@ -1,4 +1,6 @@
 (require 'markdown-mode)
+(require 'stream)
+(require 'cl)
 
 (setq task-time-format "%Y%m%d %T %z")
 
@@ -340,6 +342,127 @@ TAG-AND-CTX conforms to `task-time-tag-and-ctxp'."
 It uses `task-time-tag-first-in-buffer' to find the first tag.
 It uses `task-time-tag-stream' to build the stream."
   (task-time-tag-stream (task-time-tag-first-in-buffer))
+  )
+
+(defun task-time-tag-and-taskp (OBJECT)
+  "Return t if OBJECT is tag-and-task"
+  (and
+   (listp OBJECT)
+   (task-time-tagp (nth 0 OBJECT))
+   (listp (nth 1 OBJECT)))
+  )
+
+(defun task-time-tag-and-task-time-lessp (tt1 tt2)
+  "Given two task time-tag-and-task's compare them by time."
+  (assert (task-time-tag-and-taskp tt1))
+  (assert (task-time-tag-and-taskp tt2))
+  (let ((t1 (car tt1))
+        (t2 (car tt2)))
+    (string-lessp (cadr t1) (cadr t2))
+    )
+  )
+
+(defun task-time-tag-and-task-is-stop (tag)
+  "Given a time-tag-and-task return t if it's a stop task."
+  (assert (task-time-tag-and-taskp tag))
+  (eq (caar tag) nil)
+  )
+
+(defun task-time-tag-and-task-is-start (tag)
+  "Given a time-tag-and-task return t if it's a start task."
+  (assert (task-time-tag-and-taskp tag))
+  (eq (caar tag) t)
+  )
+
+(defun task-time-tag-and-task-time (tag)
+  "Given a time-tag-and-task return it's timestamp."
+  (assert (task-time-tag-and-taskp tag))
+  (nth 1 (car tag))
+  )
+
+(defun task-time-tag-and-task-task (tag)
+  "Given a time-tag-and-task return the task."
+  (assert (task-time-tag-and-taskp tag))
+  (cadr tag)
+  )
+  
+(defun task-time-tag-and-task-task-no-date (tag)
+  "Given a time-tag-and-task return the task without the first element.
+The first element encodes date of the task."
+  (assert (task-time-tag-and-taskp tag))
+  (cdr (task-time-tag-and-task-task tag))
+  )
+
+(defun task-time-entry (tag next-tag)
+  "Construct a time entry from start and stop tag-and-task's.
+Fail unless it's start and stop tags or they have different tasks."
+  (assert (task-time-tag-and-taskp tag))
+  (assert (task-time-tag-and-taskp next-tag))
+  (unless (task-time-tag-and-task-is-stop next-tag)
+    (error "Next tag is 'start': %s %s" tag next-tag))
+  (when (task-time-tag-and-task-is-stop tag)
+    (error "Two stop tags: %s %s" tag next-tag))
+
+  (let ((task (task-time-tag-and-task-task-no-date tag))
+        (next-task (task-time-tag-and-task-task-no-date next-tag)))
+    (unless (equal task next-task)
+      (error "Different tasks in tags: %s %s" tag next-tag))
+    (cons
+     (task-time-tag-and-task-time tag)
+     (cons
+      (task-time-tag-and-task-time next-tag)
+      task))
+    )
+  )
+
+(defun task-time-tag--to-entry-reduce-fn (tag tag-and-result)
+  (if (not tag-and-result)
+      (list tag)
+    (let ((next-tag (car tag-and-result))
+          (result (cdr tag-and-result)))
+      (if (task-time-tag-and-task-is-start tag)
+          (if (task-time-tag-and-task-is-start next-tag)
+              (error "Two start tags: %s %s" tag next-tag)
+            (cons
+             tag
+             (cons
+              (task-time-entry tag next-tag)
+              result))
+            )
+        (if (task-time-tag-and-task-is-stop next-tag)
+            (error "Two stop tags: %s %s" tag next-tag)
+          (cons tag result)
+          )
+        )
+      )
+    )
+  )
+
+(defun task-time-entryp (OBJECT)
+  "Returns t if OBJECT is a time-entry."
+  (and
+   (listp OBJECT)
+   (not (eq nil (nth 0 OBJECT))) ;; Start time
+   (not (eq nil (nth 1 OBJECT))) ;; Stop time
+   (not (eq nil (nth 2 OBJECT))) ;; Task no date
+   (listp (nth 2 OBJECT))
+   )
+  )
+
+(defun task-time-entries-from-tag-stream (stream)
+  "Returns list of time-entries from a STREAM of tags."
+  (let ((sorted-tags
+         (sort
+          (stream-to-list stream)
+          'task-time-tag-and-task-time-lessp)))
+    (cdr
+     (cl-reduce
+      'task-time-tag--to-entry-reduce-fn
+      sorted-tags
+      :from-end t
+      :initial-value nil)
+     )
+    )
   )
 
 (define-minor-mode task-tags-mode
