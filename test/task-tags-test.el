@@ -150,7 +150,7 @@
     )
   )
 
-(ert-deftest task-time-tag-and-task-test-time-lessp()
+(ert-deftest task-time-tag-and-task-test-time-lessp ()
   (let (
         (tt1
          '((t "20180506 12:20:54 -0700")
@@ -165,7 +165,7 @@
     )
   )
 
-(ert-deftest task-time-entry-test()
+(ert-deftest task-time-entry-test ()
   (should
    (equal
     (task-time-entry
@@ -178,7 +178,7 @@
    )
   )
 
-(ert-deftest task-time-entry-test-from-tag-stream()
+(ert-deftest task-time-entry-test-from-tag-stream ()
   (save-excursion
     (task-test-md)
     (let ((entries-list
@@ -201,4 +201,44 @@
        )
       )
     )
+  )
+
+(ert-deftest task-timestamp-test-toggl-date ()
+  (should
+   (equal
+    (task-timestamp-toggl-date "20180506 09:00:02 -0700")
+    "2018-05-06"
+    )))
+
+(ert-deftest task-timestamp-test-toggl-time ()
+  (should
+   (equal
+    (task-timestamp-toggl-time "20180506 09:00:02 -0700")
+    "09:00:02"
+    )))
+
+(ert-deftest task-time-entry-test-toggl-csv-line ()
+  (should
+   (equal
+    (task-time-entry--toggl-csv-line
+     "name@example.com"
+     '("20180506 12:31:51 -0700"
+       "20180506 14:31:54 -0700"
+       "Project A" "Task A2"))
+    "name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:31:51,2018-05-06,14:31:54,02:00:03,,"
+    )
+   )
+  )
+
+(ert-deftest task-time-entries-test-toggl-csv ()
+  (task-test-md)
+  (should
+   (equal
+    (task-time-entries-toggl-csv (task-time-tag-stream-from-first-in-buffer))
+    "User,Email,Client,Project,Task,Description,Billable,Start date,Start time,End date,End time,Duration,Tags,Amount ()
+name@example.com,name@example.com,,Project A,,Task A3,No,2018-05-06,09:00:02,2018-05-06,11:05:00,02:04:58,,
+name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:20:54,2018-05-06,12:25:50,00:04:56,,
+name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:31:51,2018-05-06,12:41:18,00:09:27,,"
+    )
+   )
   )

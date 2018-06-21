@@ -28,7 +28,7 @@
     )
   )
 
-(setq toggl-csv-header "User,Email,Client,Project,Task,Description,Billable,Start date,Start time,End date,End time,Duration,Tags,Amount ()")
+(setq task-toggl-csv-header "User,Email,Client,Project,Task,Description,Billable,Start date,Start time,End date,End time,Duration,Tags,Amount ()")
 
 (defun task-line-starts-with (prefix)
   "Return t if current line in buffer starts with PREFIX."
@@ -439,13 +439,17 @@ Fail unless it's start and stop tags or they have different tasks."
   )
 
 (defun task-time-entryp (OBJECT)
-  "Returns t if OBJECT is a time-entry."
+  "Returns t if OBJECT is a time-entry.
+It means 1) it's a list 2) it has start time on index 0,
+3) it has stop time at index 1, 4) it has project at index 2,
+and 5) it has task at index 3."
+
   (and
    (listp OBJECT)
    (not (eq nil (nth 0 OBJECT))) ;; Start time
    (not (eq nil (nth 1 OBJECT))) ;; Stop time
-   (not (eq nil (nth 2 OBJECT))) ;; Task no date
-   (listp (nth 2 OBJECT))
+   (stringp (nth 2 OBJECT)) ;; Project
+   (stringp (nth 3 OBJECT)) ;; Task
    )
   )
 
@@ -462,6 +466,106 @@ Fail unless it's start and stop tags or they have different tasks."
       :from-end t
       :initial-value nil)
      )
+    )
+  )
+
+(defun task-time-entry--project (entry)
+  (nth 2 entry)
+  )
+
+(defun task-time-entry--task (entry)
+  (nth 3 entry)
+  )
+
+(defun task-time-entry--start (entry)
+  (nth 0 entry)
+  )
+
+(defun task-time-entry--stop (entry)
+  (nth 1 entry)
+  )
+
+(defun task-time-entry-duration (entry)
+  "Return duration of the ENTRY.
+ENTRY conforms to `task-time-entryp'."
+  (assert (task-time-entryp entry))
+  (let ((tstart (date-to-time (task-time-entry--start entry)))
+        (tstop  (date-to-time (task-time-entry--stop  entry))))
+    (format-time-string
+     "%H:%M:%S"
+     (time-subtract tstop tstart) t)
+    )
+  )
+
+(defun task-timestamp-toggl-date (timestamp)
+  "Returns date from the TIMESTAMP string"
+  (format-time-string
+   "%Y-%m-%d"
+   (date-to-time timestamp))
+  )
+
+(defun task-timestamp-toggl-time (timestamp)
+  "Returns time from the TIMESTAMP string."
+  (format-time-string
+   "%H:%M:%S"
+   (date-to-time timestamp))
+  )
+
+(defun task-time-entry--toggl-csv-line (email entry)
+  (assert (task-time-entryp entry))
+  (mapconcat
+   'identity
+   (list
+    email
+    email
+    ""
+    (task-time-entry--project entry)
+    ""
+    (task-time-entry--task entry)
+    "No"
+    (task-timestamp-toggl-date
+     (task-time-entry--start entry))
+    (task-timestamp-toggl-time
+     (task-time-entry--start entry))
+    (task-timestamp-toggl-date
+     (task-time-entry--stop entry))
+    (task-timestamp-toggl-time
+     (task-time-entry--stop entry))
+    (task-time-entry-duration entry)
+    ""
+    ""
+    )
+   ","
+   )
+  )
+
+(defun task-time-entries-toggl-csv (tag-stream &optional filename)
+  "Converts TAG-STREAM into Toggl CSV.
+Return CSV string if no FILENAME is provided.
+Creates a file buffer for FILENAME and copies
+resulting CSV there otherwise."
+  (if (not filename)
+      (let ((email (task-config-email))
+            (entry-list
+             (task-time-entries-from-tag-stream tag-stream)))
+        (mapconcat
+         'identity
+         (list
+          task-toggl-csv-header
+          (mapconcat
+           (lambda (entry)
+             (task-time-entry--toggl-csv-line email entry))
+           entry-list
+           "\n")
+          )
+         "\n"
+         )
+        )
+    (let ((csv (task-time-entries-csv tag-stream)))
+      (message "csv: %s" csv)
+      (switch-to-buffer (create-file-buffer filename))
+      (insert csv)
+      )
     )
   )
 
