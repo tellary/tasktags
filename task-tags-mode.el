@@ -184,6 +184,78 @@ Search for hext task otherwise.
    (nth 1 task))
   )
 
+(defun task-from-position (pos)
+  "Goes to POS and invokes `task-from-current-position'
+from there."
+  (goto-char pos)
+  (task-from-current-position)
+  )
+
+(defun task-from-current-position--find-date (start-pos)
+  (let ((level (markdown-outline-level)))
+    (when (and (bobp) (not (eq 1 level)))
+      (error "No date found above position %s" start-pos))
+    (unless
+        (eq 1 level)
+      (markdown-previous-heading)
+      (task-from-current-position--find-date start-pos)
+      )
+    )
+  )
+
+(defun task-from-current-position--until-pos (task pos)
+  (let ((current-task-pos (point))
+        (next-task (task-next task)))
+    (if (> (point) pos)
+        (list
+         (cons current-task-pos task)
+         (cons (point) next-task))
+      (task-from-current-position--until-pos next-task pos)
+      )
+    )
+  )
+
+(defun task-from-current-position ()
+  "Finds task at the current position.
+Finds the closest date, project and task headers above
+the current position navigates to the task header found
+and returns a task constructed out of the three.
+Finds next task down the current position if the closest
+header above is project or date."
+  (unless (markdown-heading-at-point)
+    (markdown-previous-heading))
+  (let* ((start-pos (point))
+         (level (markdown-outline-level)))
+    (task-from-current-position--find-date start-pos)
+    (let ((first-task (task-from-heading nil nil)))
+      (if (> (point) start-pos)
+          first-task
+        (let* ((current-and-next-pos-and-task
+               (task-from-current-position--until-pos
+                first-task start-pos))
+               (current-pos-and-task
+                (nth 0 current-and-next-pos-and-task))
+               (next-pos-and-task
+                (nth 1 current-and-next-pos-and-task))
+               (current-pos (car current-pos-and-task))
+               (current-task (cdr current-pos-and-task))
+               (next-pos (car next-pos-and-task))
+               (next-task (cdr next-pos-and-task)))
+
+          (if (eq 2 level) ;; project
+              (progn
+                (goto-char next-pos)
+                next-task
+                )
+            (goto-char current-pos)
+            current-task
+            )
+          )
+        )
+      )
+    )
+  )
+
 (defun task-stream--car (stream)
   (cdr (assoc 'task stream)))
 
@@ -561,7 +633,7 @@ resulting CSV there otherwise."
          "\n"
          )
         )
-    (let ((csv (task-time-entries-csv tag-stream)))
+    (let ((csv (task-time-entries-toggl-csv tag-stream)))
       (message "csv: %s" csv)
       (switch-to-buffer (create-file-buffer filename))
       (insert csv)

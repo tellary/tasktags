@@ -38,10 +38,7 @@
               (let ((test5 (task-next test4)))
                 (should
                  (equal test5 '("2018-May-06" "Project A" "Task A3")))
-                (let ((test6 (task-next test5)))
-                  (should
-                   (equal test6 nil))
-                  )
+                ; More tasks to follow
                 )
               )
             )
@@ -63,7 +60,8 @@
         ("2018-May-03" "Project B" "Task B2")
         ("2018-May-03" "Project B" "Task B3")
         ("2018-May-06" "Project A" "Task A2")
-        ("2018-May-06" "Project A" "Task A3"))
+        ("2018-May-06" "Project A" "Task A3")
+        ("2018-May-06" "Project B" "Task B2"))
       )
      )
     )
@@ -196,7 +194,10 @@
            "Project A" "Task A2")
           ("20180506 12:31:51 -0700"
            "20180506 12:41:18 -0700"
-           "Project A" "Task A2"))
+           "Project A" "Task A2")
+          ("20180506 13:41:02 -0700"
+           "20180506 14:05:18 -0700"
+           "Project B" "Task B2"))
         )
        )
       )
@@ -238,7 +239,56 @@
     "User,Email,Client,Project,Task,Description,Billable,Start date,Start time,End date,End time,Duration,Tags,Amount ()
 name@example.com,name@example.com,,Project A,,Task A3,No,2018-05-06,09:00:02,2018-05-06,11:05:00,02:04:58,,
 name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:20:54,2018-05-06,12:25:50,00:04:56,,
-name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:31:51,2018-05-06,12:41:18,00:09:27,,"
+name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:31:51,2018-05-06,12:41:18,00:09:27,,
+name@example.com,name@example.com,,Project B,,Task B2,No,2018-05-06,13:41:02,2018-05-06,14:05:18,00:24:16,,"
     )
    )
+  )
+
+(ert-deftest task-test-from-position ()
+  (task-test-md)
+  (should
+   (equal
+    (task-from-position 399)
+    '("2018-May-06" "Project A" "Task A3")))
+  )
+
+(ert-deftest task-test-from-position-first-in-proj ()
+  (task-test-md)
+  (should
+   (equal
+    (task-from-position 272)
+    '("2018-May-06" "Project A" "Task A2")))
+  )
+
+(ert-deftest task-test-from-position-after-date ()
+  (task-test-md)
+  (should
+   (equal
+    (task-from-position 124)
+    '("2018-May-06" "Project A" "Task A2")))
+  )
+
+(ert-deftest task-test-from-position-after-project-first-in-date ()
+  (task-test-md)
+  (should
+   (equal
+    (task-from-position 174)
+    '("2018-May-06" "Project A" "Task A2")))
+  )
+
+(ert-deftest task-test-from-position-after-project ()
+  (task-test-md)
+  (should
+   (equal
+    (task-from-position 459)
+    '("2018-May-06" "Project B" "Task B2")))
+  )
+
+(ert-deftest task-test-from-position-last-task ()
+  (task-test-md)
+  (should
+   (equal
+    (task-from-position 476)
+    '("2018-May-06" "Project B" "Task B2")))
   )
