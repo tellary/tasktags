@@ -569,18 +569,32 @@ ENTRY conforms to `task-time-entryp'."
     )
   )
 
+(defun task-timestamp-as-utc (timestamp)
+  "Return calendar value of TIMESTAMP as it's in UTC zone.
+Or, get clock time and replace timezone with UTC."
+  (apply
+   'encode-time
+   (let ((time (decode-time
+                (date-to-time timestamp))))
+     (setcdr
+      (last time) '(0))
+     time
+     )
+   )
+  )
+
 (defun task-timestamp-toggl-date (timestamp)
   "Returns date from the TIMESTAMP string"
   (format-time-string
    "%Y-%m-%d"
-   (date-to-time timestamp))
+   (task-timestamp-as-utc timestamp))
   )
 
 (defun task-timestamp-toggl-time (timestamp)
   "Returns time from the TIMESTAMP string."
   (format-time-string
    "%H:%M:%S"
-   (date-to-time timestamp))
+   (task-timestamp-as-utc timestamp))
   )
 
 (defun task-time-entry--toggl-csv-line (email entry)
