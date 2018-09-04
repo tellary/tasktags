@@ -1,7 +1,7 @@
 (require 'ert)
 (require 'task-tags-mode)
 
-(defun task-find-md-file(file)
+(defun task-find-md-file (file)
   (find-file file)
   (switch-to-buffer file)
   (should

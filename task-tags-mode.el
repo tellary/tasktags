@@ -257,7 +257,7 @@ header above is project or date."
   )
 
 (defun task-stream--car (stream)
-  (cdr (assoc 'task stream)))
+  (cdr (assq 'task stream)))
 
 (defun task-stream--cdr (stream)
   (task-stream-from-task
@@ -269,10 +269,11 @@ header above is project or date."
   "Create a stream of tasks starting at the given TASK.
 `task-next' is used to build the stream."
   (if (eq nil task)
-      nil
+      stream-nil
     (list
      (cons 'car 'task-stream--car)
      (cons 'cdr 'task-stream--cdr)
+     (cons 'null 'stream-false)
      (cons 'task task))
     )
   )
@@ -384,7 +385,7 @@ Result conforms to `task-time-tag-and-ctxp'."
 
 (defun task-time-tag-stream--car (stream)
   (subseq 
-   (cdr (assoc 'tag-and-ctx stream))
+   (cdr (assq 'tag-and-ctx stream))
    0 2)
   )
 
@@ -399,13 +400,15 @@ Result conforms to `task-time-tag-and-ctxp'."
 `task-time-tag-next' is used to build the stream.
 TAG-AND-CTX conforms to `task-time-tag-and-ctxp'."
   (if (eq nil tag-and-ctx)
-      nil
+      stream-nil
     (unless (task-time-tag-and-ctxp tag-and-ctx)
       (error "tag-and-ctx must be task-time-tag-and-ctxp"))
     (list
      (cons 'car 'task-time-tag-stream--car)
      (cons 'cdr 'task-time-tag-stream--cdr)
-     (cons 'tag-and-ctx tag-and-ctx))
+     (cons 'null 'stream-false)
+     (cons 'tag-and-ctx tag-and-ctx)
+     )
     )
   )
 

@@ -83,3 +83,47 @@
      (equal (stream-to-list stream) '(1 2 3)))
     )
   )
+
+(ert-deftest stream-test-drop-while ()
+  (let ((stream (stream-from-list '(1 3 4 7 5))))
+    (should
+     (equal
+      (stream-to-list
+       (stream-drop-while 'oddp stream))
+      '(4 7 5))
+     )
+    )
+  )
+
+(ert-deftest stream-test-drop-while-all ()
+  (let ((stream (stream-from-list '(1 3 9 7 5))))
+    (should
+     (equal
+      (stream-to-list
+       (stream-drop-while 'oddp stream))
+      '())
+     )
+    )
+  )
+
+(ert-deftest stream-test-filter ()
+  (let ((stream (stream-from-list '(1 2 3 4 5))))
+    (should
+     (equal
+      (stream-to-list
+       (stream-filter 'oddp stream))
+      '(1 3 5))
+     )
+    )
+  )
+
+(ert-deftest stream-test-filter-last-no-match ()
+  (let ((stream (stream-from-list '(1 2 3 4 5))))
+    (should
+     (equal
+      (stream-to-list
+       (stream-filter 'evenp stream))
+      '(2 4))
+     )
+    )
+  )
