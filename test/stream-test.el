@@ -127,3 +127,23 @@
      )
     )
   )
+
+(ert-deftest stream-test-map ()
+  (let ((stream (stream-from-list '(1 2 3 4 5))))
+    (should
+     (equal
+      (stream-to-list
+       (stream-map (lambda (x) (* x x)) stream))
+      '(1 4 9 16 25))
+     )
+    )
+  )
+
+(ert-deftest stream-test-map-nil ()
+  (should
+   (equal
+    (stream-to-list
+     (stream-map (lambda (x) (* x x)) stream-nil))
+    nil)
+   )
+  )

@@ -135,10 +135,10 @@ See `streamp' for definitian of stream."
   )
 
 (defun stream-filter--do-find-next (stream)
-  "Finds next value in STREAM if not cached.
+  "Finds next value in STREAM unless it's not already cached.
 It mutates state of the STREAM to cache found value.
 It rather has a valid value cached as 'value,
-or a null stream under 'original-stream."
+or a null stream under 'stream."
   (let ((predicate (cdr (assq 'predicate stream)))
         (original-stream (assq 'stream stream))
         (value (assq 'value stream)))
@@ -193,6 +193,9 @@ or a null stream under 'original-stream."
   )
 
 (defun stream-filter (predicate stream)
+  "Filters STREAM with PREDICATE function.
+The STREAM is advanced on access only and next value is cached,
+see `stream-filter--do-find-next' for more details."
   (if (stream-null stream)
       stream-nil
     (list
@@ -202,6 +205,41 @@ or a null stream under 'original-stream."
      (cons 'predicate predicate)
      (cons 'stream stream)
      (cons 'value 'stream-filter--find-next)
+     )
+    )
+  )
+
+(defun stream-map--car (stream)
+  (assert (streamp stream))
+  (let ((fn (cdr (assq 'fn stream)))
+        (original-stream (cdr (assq 'stream stream))))
+    (funcall fn (stream-car original-stream))
+    )
+  )
+
+(defun stream-map--cdr (stream)
+  (assert (streamp stream))
+  (let ((fn (cdr (assq 'fn stream)))
+        (original-stream (cdr (assq 'stream stream))))
+    (if (stream-null original-stream)
+        stream-nil
+      (stream-map fn (stream-cdr original-stream))
+      )
+    )
+  )
+
+(defun stream-map (fn stream)
+  "Maps STREAM with FN function.
+Resulting stream has values of the original STREAM with the FN applied."
+  (if (stream-null stream)
+      stream-nil
+    (assert (streamp stream))
+    (list
+     (cons 'car 'stream-map--car)
+     (cons 'cdr 'stream-map--cdr)
+     (cons 'null 'stream-false)
+     (cons 'stream stream)
+     (cons 'fn fn)
      )
     )
   )
