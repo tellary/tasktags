@@ -224,8 +224,8 @@ Finds next task down the current position if the closest
 header above is project or date."
   (unless (markdown-heading-at-point)
     (markdown-previous-heading))
-  (let* ((start-pos (point))
-         (level (markdown-outline-level)))
+  (let ((start-pos (point))
+        (level (markdown-outline-level)))
     (task-from-current-position--find-date start-pos)
     (let ((first-task (task-from-heading nil nil)))
       (if (> (point) start-pos)
@@ -389,16 +389,34 @@ Result conforms to `task-time-tag-and-ctxp'."
    0 2)
   )
 
-(defun task-time-tag-stream--cdr (stream)
-  (task-time-tag-stream
-   (task-time-tag-next
-    (cdr (cdr (assoc 'tag-and-ctx stream)))))
+(defun task-time-tag-stream--tag-ctx (stream)
+  (cdr (cdr (assq 'tag-and-ctx stream)))
   )
 
-(defun task-time-tag-stream (tag-and-ctx)
+(defun task-time-tag-stream--end-pos (stream)
+  (cdr (assq 'end-pos stream))
+  )
+
+(defun task-time-tag-stream--cdr (stream)
+  (let* ((current-tag-ctx
+          (task-time-tag-stream--tag-ctx stream))
+         (end-pos (task-time-tag-stream--end-pos stream))
+         (next-tag-and-ctx
+          (task-time-tag-next current-tag-ctx)))
+    (if (<= (point) end-pos)
+        (task-time-tag-stream next-tag-and-ctx end-pos)
+      stream-nil
+      )
+    )
+  )
+
+(defun task-time-tag-stream (tag-and-ctx &optional end-pos)
   "Create a stream of time tags starting from a TAG-AND-CTX.
 `task-time-tag-next' is used to build the stream.
-TAG-AND-CTX conforms to `task-time-tag-and-ctxp'."
+TAG-AND-CTX conforms to `task-time-tag-and-ctxp'.
+END-POS limits the stream. No tag will appear in the
+resulting stream whose position is more than END-POS.
+END-POS is end of buffer if not provided."
   (if (eq nil tag-and-ctx)
       stream-nil
     (unless (task-time-tag-and-ctxp tag-and-ctx)
@@ -408,6 +426,7 @@ TAG-AND-CTX conforms to `task-time-tag-and-ctxp'."
      (cons 'cdr 'task-time-tag-stream--cdr)
      (cons 'null 'stream-false)
      (cons 'tag-and-ctx tag-and-ctx)
+     (cons 'end-pos (if end-pos end-pos (point-max)))
      )
     )
   )
@@ -417,6 +436,24 @@ TAG-AND-CTX conforms to `task-time-tag-and-ctxp'."
 It uses `task-time-tag-first-in-buffer' to find the first tag.
 It uses `task-time-tag-stream' to build the stream."
   (task-time-tag-stream (task-time-tag-first-in-buffer))
+  )
+
+(defun task-time-tag-stream-from-task-at-pos (pos &optional end-pos)
+  "Create a stream of time tags starting at a task at POS,
+having no tags after END-POS.
+
+It uses `task-from-position' to find the first task
+and `task-time-tag-from-task' to find first tag in stream.
+It essentially means that all tags of the task at POS
+are included.
+
+No tag will appear in the
+resulting stream whose position is more than END-POS.
+END-POS is end of buffer if not provided."
+  (task-time-tag-stream
+   (task-time-tag-from-task
+    (task-from-position pos))
+   end-pos)
   )
 
 (defun task-time-tag-and-taskp (OBJECT)
