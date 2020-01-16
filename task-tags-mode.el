@@ -700,6 +700,16 @@ resulting CSV there otherwise."
     )
   )
 
+(defun task-time-entries-toggl-csv-point (filename)
+  "Creates Toggl CSV from current position in a buffer.
+FILENAME is a file buffer to hold CSV.
+See `task-time-tag-stream-from-task-at-pos'."
+  (interactive "BOutput buffer:")
+  (task-time-entries-toggl-csv
+   (task-time-tag-stream-from-task-at-pos (point))
+   filename)
+  )
+
 (define-minor-mode task-tags-mode
   "Task & time tracking in Markdown document with tags"
   :lighter " ttags"
