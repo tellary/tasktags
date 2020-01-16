@@ -627,14 +627,14 @@ Or, get clock time and replace timezone with UTC."
   "Returns date from the TIMESTAMP string"
   (format-time-string
    "%Y-%m-%d"
-   (task-timestamp-as-utc timestamp))
+   (date-to-time timestamp))
   )
 
 (defun task-timestamp-toggl-time (timestamp)
   "Returns time from the TIMESTAMP string."
   (format-time-string
    "%H:%M:%S"
-   (task-timestamp-as-utc timestamp))
+   (date-to-time timestamp))
   )
 
 (defun task--quote-str (str)
