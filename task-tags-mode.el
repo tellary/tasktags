@@ -637,6 +637,9 @@ Or, get clock time and replace timezone with UTC."
    (task-timestamp-as-utc timestamp))
   )
 
+(defun task--quote-str (str)
+  (concat "\"" str "\""))
+
 (defun task-time-entry--toggl-csv-line (email entry)
   (assert (task-time-entryp entry))
   (mapconcat
@@ -645,9 +648,11 @@ Or, get clock time and replace timezone with UTC."
     email
     email
     ""
-    (task-time-entry--project entry)
+    (task--quote-str
+     (task-time-entry--project entry))
     ""
-    (task-time-entry--task entry)
+    (task--quote-str
+     (task-time-entry--task entry))
     "No"
     (task-timestamp-toggl-date
      (task-time-entry--start entry))

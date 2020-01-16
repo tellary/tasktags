@@ -262,7 +262,7 @@
      '("20180506 12:31:51 -0700"
        "20180506 14:31:54 -0700"
        "Project A" "Task A2"))
-    "name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,05:31:51,2018-05-06,07:31:54,02:00:03,,"
+    "name@example.com,name@example.com,,\"Project A\",,\"Task A2\",No,2018-05-06,05:31:51,2018-05-06,07:31:54,02:00:03,,"
     )
    )
   )
@@ -273,10 +273,10 @@
    (equal
     (task-time-entries-toggl-csv (task-time-tag-stream-from-first-in-buffer))
     "User,Email,Client,Project,Task,Description,Billable,Start date,Start time,End date,End time,Duration,Tags,Amount ()
-name@example.com,name@example.com,,Project A,,Task A3,No,2018-05-06,02:00:02,2018-05-06,04:05:00,02:04:58,,
-name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,05:20:54,2018-05-06,05:25:50,00:04:56,,
-name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,05:31:51,2018-05-06,05:41:18,00:09:27,,
-name@example.com,name@example.com,,Project B,,Task B2,No,2018-05-06,06:41:02,2018-05-06,07:05:18,00:24:16,,"
+name@example.com,name@example.com,,\"Project A\",,\"Task A3\",No,2018-05-06,02:00:02,2018-05-06,04:05:00,02:04:58,,
+name@example.com,name@example.com,,\"Project A\",,\"Task A2\",No,2018-05-06,05:20:54,2018-05-06,05:25:50,00:04:56,,
+name@example.com,name@example.com,,\"Project A\",,\"Task A2\",No,2018-05-06,05:31:51,2018-05-06,05:41:18,00:09:27,,
+name@example.com,name@example.com,,\"Project B\",,\"Task B2\",No,2018-05-06,06:41:02,2018-05-06,07:05:18,00:24:16,,"
     )
    )
   )
