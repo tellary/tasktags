@@ -21,10 +21,12 @@
 (defun task-config-email()
   (save-excursion
     (end-of-buffer)
-    (search-backward-regexp
-     "<task-config-email s=\"\\([^\"]*\\)\"/>"
-     nil t)
-    (match-string-no-properties 1)
+    (if (search-backward-regexp
+         "<task-config-email s=\"\\([^\"]*\\)\"/>"
+         nil t)
+        (match-string-no-properties 1)
+      (error "<task-config-email/> missing")
+      )
     )
   )
 
@@ -700,14 +702,23 @@ resulting CSV there otherwise."
     )
   )
 
-(defun task-time-entries-toggl-csv-point (filename)
-  "Creates Toggl CSV from current position in a buffer.
-FILENAME is a file buffer to hold CSV.
-See `task-time-tag-stream-from-task-at-pos'."
+(defun task-toggl-csv (filename)
+  "Creates Toggl CSV report.
+Use region if selected, or report from the current position until end of
+the current buffer."
   (interactive "BOutput buffer:")
-  (task-time-entries-toggl-csv
-   (task-time-tag-stream-from-task-at-pos (point))
-   filename)
+  (save-excursion
+    (let ((stream
+           (if (use-region-p)
+               (task-time-tag-stream-from-task-at-pos
+                (region-beginning)
+                (region-end))
+             (task-time-tag-stream-from-task-at-pos (point))
+             )
+           ))
+      (task-time-entries-toggl-csv stream filename)
+      )
+    )
   )
 
 (define-minor-mode task-tags-mode
