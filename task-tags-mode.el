@@ -640,7 +640,7 @@ Or, get clock time and replace timezone with UTC."
   )
 
 (defun task--quote-str (str)
-  (concat "\"" str "\""))
+  (concat "\"" (replace-regexp-in-string "\"" "\\\\\"" str) "\""))
 
 (defun task-time-entry--toggl-csv-line (email entry)
   (assert (task-time-entryp entry))
