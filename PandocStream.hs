@@ -11,7 +11,16 @@ data PandocStream =
   | InlineStream [Block] [Inline]
   deriving Show
 
-data PandocElement = BlockElement Block | InlineElement Inline deriving Show
+data PandocElement =
+    BlockElement Block
+  | InlineElement Inline
+  deriving (Eq, Show)
+
+toBlock (BlockElement b) = return b
+toBlock _                = fail "Not a block element"
+
+toInline (InlineElement i) = return i
+toInline _                 = fail "Not an inline"
 
 instance Monad m => Stream PandocStream m PandocElement where
   uncons (PandocStream (Pandoc _ bs)) = uncons (BlockStream bs)
