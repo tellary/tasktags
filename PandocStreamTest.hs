@@ -18,5 +18,5 @@ unconsStream n s = do
   s' <- fmap (snd . fromJust) . uncons $ s
   unconsStream (n - 1) s'
 
--- putStrLn =<< unlines . map show <$> testList
+-- putStr =<< unlines . map show <$> testList
 testList = toList =<< PandocStream <$> test

@@ -12,15 +12,20 @@ import           Text.Parsec
 showElement (BlockElement  b) = "(" ++ show b ++ ")"
 showElement (InlineElement i) = "(" ++ show i ++ ")"
 
+-- It's impossible to track original source position when iterating
+-- a `Pandoc` AST. Let's consider a heading without any text followed by the
+-- next header. It's going to be the same AST regardless how many empty lines
+-- are between the headers.
+nextPos pos (BlockElement  _) _ =
+  setSourceColumn (incSourceLine pos 1) 1
+nextPos pos (InlineElement _) _ =
+  incSourceColumn pos 1
+
 satisfyElement :: Stream s m PandocElement =>
   (PandocElement -> Bool) -> ParsecT s u m PandocElement
 satisfyElement p =
   tokenPrim showElement nextPos test
-  where test t                          = if p t then Just t else Nothing
-        nextPos pos (BlockElement  _) _ =
-          setSourceColumn (incSourceLine pos 1) 1
-        nextPos pos (InlineElement _) _ =
-          incSourceColumn pos 1
+  where test t = if p t then Just t else Nothing
 
 anyElement :: Stream s m PandocElement => ParsecT s u m PandocElement
 anyElement = satisfyElement (const True)
