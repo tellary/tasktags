@@ -4,6 +4,7 @@ module TimeTagParser where
 
 import Data.List (intercalate, isSuffixOf)
 import Data.Maybe (catMaybes)
+import Data.Time
 import PandocParser
 import PandocStream
 import Text.Pandoc
@@ -13,9 +14,18 @@ type Project   = String
 type Task      = String
 type Timestamp = String
 data TimeTag   =
-    StartTimeTag Project Task Timestamp
-  | StopTimeTag  Project Task Timestamp
-  deriving (Eq, Show)
+    StartTimeTag Project Task ZonedTime
+  | StopTimeTag  Project Task ZonedTime
+  deriving Show
+
+instance Eq TimeTag where
+  (StartTimeTag p1 t1 zt1) == (StartTimeTag p2 t2 zt2) =
+    p1 == p2 && t1 == t2 && zonedTimeToUTC zt1 == zonedTimeToUTC zt2
+  (StopTimeTag p1 t1 zt1) == (StopTimeTag p2 t2 zt2) =
+    p1 == p2 && t1 == t2 && zonedTimeToUTC zt1 == zonedTimeToUTC zt2
+  _ == _ = False
+
+parseTagTime = parseTimeM False defaultTimeLocale "%Y%m%d %T %z"
 
 isTagElement     e =
      isHeaderL 1 e || isHeaderL 2 e || isHeaderL 3 e
@@ -82,7 +92,11 @@ timeTag project task = do
                  (t, "\"/>") -> return t
                  _           ->
                    fail "Malformed <task-start/> or <task-stop/>"
-  let timestamp = intercalate " " [date, time, tz]
+  let timestampStr = intercalate " " [date, time, tz]
+  timestamp <-
+        case parseTagTime timestampStr of
+          Just t  -> return t
+          Nothing -> fail $ "Wrong timestamp string: " ++ timestampStr
   if start
     then return $ StartTimeTag project task timestamp
     else return $ StopTimeTag  project task timestamp
