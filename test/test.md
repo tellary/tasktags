@@ -15,6 +15,8 @@ Project A
 
 # 2018-May-06
 
+# 2018-May-07
+
 <task-config-email s="name@example.com"/>
 
 ## Project A
@@ -30,6 +32,8 @@ Project A
 
 <task-start t="20180506 09:00:02 -0700"/>
 <task-stop t="20180506 11:05:00 -0700"/>
+
+## Project A
 
 ## Project B
 

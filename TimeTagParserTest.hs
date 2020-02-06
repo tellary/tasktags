@@ -7,8 +7,11 @@ import           Text.Pandoc
 import           Text.Parsec
 import           TimeTagParser
 
-testPandoc = fromRight (error "Can't read test.md")
-  . runPure . readMarkdown def . T.pack <$> readFile "test/test.md"
+readPandoc f = fromRight (error $ "Can't read " ++ f)
+  . runPure . readMarkdown def . T.pack <$> readFile f
+readPandocStream f = PandocStream <$> readPandoc f
+
+testPandoc = readPandoc "test/test.md"
 
 testPandocStream = PandocStream <$> testPandoc
 
@@ -39,16 +42,20 @@ t3 = assert . (== []) <$> tags0
 
 allTags = fromRight undefined . parse timeTags "" <$> testPandocStream
 
+expectedTimeTags =
+  [StartTimeTag "Project A" "Task A2" "20180506 12:31:51 -0700",
+   StartTimeTag "Project A" "Task A2" "20180506 12:20:54 -0700",
+   StopTimeTag  "Project A" "Task A2" "20180506 12:25:50 -0700",
+   StopTimeTag  "Project A" "Task A2" "20180506 12:41:18 -0700",
+   StartTimeTag "Project A" "Task A3" "20180506 09:00:02 -0700",
+   StopTimeTag  "Project A" "Task A3" "20180506 11:05:00 -0700",
+   StartTimeTag "Project B" "Task B2" "20180506 13:41:02 -0700",
+   StopTimeTag "Project B" "Task B2" "20180506 14:05:18 -0700"]
+
 t4 = assert
-     . (== [StartTimeTag "Project A" "Task A2" "20180506 12:31:51 -0700",
-            StartTimeTag "Project A" "Task A2" "20180506 12:20:54 -0700",
-            StopTimeTag  "Project A" "Task A2" "20180506 12:25:50 -0700",
-            StopTimeTag  "Project A" "Task A2" "20180506 12:41:18 -0700",
-            StartTimeTag "Project A" "Task A3" "20180506 09:00:02 -0700",
-            StopTimeTag  "Project A" "Task A3" "20180506 11:05:00 -0700",
-            StartTimeTag "Project B" "Task B2" "20180506 13:41:02 -0700",
-            StopTimeTag "Project B" "Task B2" "20180506 14:05:18 -0700"])
-     <$> allTags <*> pure "All tags from test.md are as expected"
+     .   (== expectedTimeTags)
+     <$> allTags
+     <*> pure "All tags from test.md are as expected"
 
 tests = do
   putStr . unlines =<< sequence [t1, t2, t3, t4]

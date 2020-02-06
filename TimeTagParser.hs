@@ -43,14 +43,13 @@ dayTimeTags, projectTimeTags
 dayTimeTags = do
   many nonTagElement
   headerL 1
-  concat <$> many projectTimeTags
-
+  concat <$> many (try $ projectTimeTags)
 
 projectTimeTags = do
   many dayElement
   Header _ _ is2 <- headerL 2
   let project = writeInlines is2
-  concat <$> many (taskTimeTags project)
+  concat <$> many (try $ taskTimeTags project)
 
 taskTimeTags :: Stream s m PandocElement
   => Project -> ParsecT s u m [TimeTag]
