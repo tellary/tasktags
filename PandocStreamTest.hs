@@ -18,12 +18,5 @@ unconsStream n s = do
   s' <- fmap (snd . fromJust) . uncons $ s
   unconsStream (n - 1) s'
 
-unconsList :: Stream s m t => s -> m [t]
-unconsList s = do
-  u <- uncons s
-  case u of
-    Just (e, s') -> (e:) <$> unconsList s'
-    Nothing      -> return []
-
 -- putStrLn =<< unlines . map show <$> testList
-testList = unconsList =<< PandocStream <$> test
+testList = toList =<< PandocStream <$> test

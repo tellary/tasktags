@@ -9,8 +9,8 @@ import           PandocStream
 import           Text.Pandoc
 import           Text.Parsec
 
-showElement (BlockElement  b) = show b
-showElement (InlineElement i) = show i
+showElement (BlockElement  b) = "(" ++ show b ++ ")"
+showElement (InlineElement i) = "(" ++ show i ++ ")"
 
 satisfyElement :: Stream s m PandocElement =>
   (PandocElement -> Bool) -> ParsecT s u m PandocElement
@@ -18,7 +18,7 @@ satisfyElement p =
   tokenPrim showElement nextPos test
   where test t                          = if p t then Just t else Nothing
         nextPos pos (BlockElement  _) _ =
-          setSourceColumn (incSourceLine pos 1) 0
+          setSourceColumn (incSourceLine pos 1) 1
         nextPos pos (InlineElement _) _ =
           incSourceColumn pos 1
 
@@ -27,12 +27,24 @@ anyElement = satisfyElement (const True)
 
 element e = satisfyElement (== e) <?> show e
 
-isHeader l (BlockElement (Header l' _ _)) = l == l'
-isHeader _ _                              = False
+isHeaderL l (BlockElement (Header l' _ _)) = l == l'
+isHeaderL _ _                              = False
 
-header :: Stream s m PandocElement => Int -> ParsecT s u m Block
-header l = toBlock
-  =<< satisfyElement (isHeader l) <?> "(Header " ++ show l ++ " _ _)"
+isHeaderS s (BlockElement (Header _ _ is)) = s == writeInlines is
+isHeaderS _ _                              = False
+
+isHeader = maybe False (const True) . (blockToHeader =<<) . toBlock
+
+headerL :: Stream s m PandocElement => Int -> ParsecT s u m Block
+headerL l = toBlock
+  =<< satisfyElement (isHeaderL l) <?> "(Header " ++ show l ++ " _ _)"
+
+headerS :: Stream s m PandocElement => String -> ParsecT s u m Block
+headerS s = toBlock
+  =<< satisfyElement (isHeaderS s) <?> "(Header _ _ \"" ++ s ++ "\")"
+
+anyHeader :: Stream s m PandocElement => ParsecT s u m Block
+anyHeader = blockToHeader =<< toBlock =<< satisfyElement isHeader
 
 writeInlines = T.unpack
   . fromRight (error "Can't write inlines")
@@ -43,12 +55,16 @@ writeInlines = T.unpack
 
 findElement :: Stream s m PandocElement =>
   ParsecT s u m a -> ParsecT s u m a
-findElement p = do
+findElement p = findElementSkip p anyElement
+
+findElementSkip :: Stream s m PandocElement =>
+  ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m a
+findElementSkip p skip = do
   r <- findMaybe
   case r of
     Just e  -> return e
     Nothing -> findElement p
-  where findMaybe = try (Just <$> p) <|> (Nothing <$ anyElement)
+  where findMaybe = try (Just <$> p) <|> (Nothing <$ skip)
 
 satisfyInline :: Stream s m PandocElement =>
   (Inline -> Bool) -> ParsecT s u m Inline
