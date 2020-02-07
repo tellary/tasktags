@@ -63,5 +63,29 @@ t4 = assert
      <$> allTags
      <*> pure "All tags from test.md are as expected"
 
+loadedTimeEntriesEither = parse timeEntries "" <$> testPandocStream
+loadedTimeEntries = fromRight undefined <$> loadedTimeEntriesEither
+expectedTimeEntries = [
+  TimeEntry
+    "Project A" "Task A3"
+    (tagTime "20180506 09:00:02 -0700")
+    (tagTime "20180506 11:05:00 -0700"),
+  TimeEntry
+    "Project A" "Task A2"
+    (tagTime "20180506 12:20:54 -0700")
+    (tagTime "20180506 12:25:50 -0700"),
+  TimeEntry
+    "Project A" "Task A2"
+    (tagTime "20180506 12:31:51 -0700")
+    (tagTime "20180506 12:41:18 -0700"),
+  TimeEntry
+    "Project B" "Task B2"
+    (tagTime "20180506 13:41:02 -0700")
+    (tagTime "20180506 14:05:18 -0700")
+  ]
+testTimeEntries =
+  assert . (== expectedTimeEntries)
+  <$> loadedTimeEntries <*> pure "test.md time entries are as expected"
+
 tests = do
-  putStr . unlines =<< sequence [t1, t2, t3, t4]
+  putStr . unlines =<< sequence [t1, t2, t3, t4, testTimeEntries]
