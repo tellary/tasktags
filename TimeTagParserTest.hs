@@ -87,5 +87,15 @@ testTimeEntries =
   assert . (== expectedTimeEntries)
   <$> loadedTimeEntries <*> pure "test.md time entries are as expected"
 
+togglCsv = toTogglCsv "tellary@gmail.com" <$> loadedTimeEntries
+
+expectedTogglCsv = readFile "test/toggl.csv"
+
+testTogglCsv = do
+  csv <- togglCsv
+  exp <- expectedTogglCsv
+  return $ assert (csv == exp) "toggl.csv as expected"
+
 tests = do
-  putStr . unlines =<< sequence [t1, t2, t3, t4, testTimeEntries]
+  putStr . unlines =<< sequence [
+    t1, t2, t3, t4, testTimeEntries, testTogglCsv]

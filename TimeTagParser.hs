@@ -3,9 +3,11 @@
 module TimeTagParser where
 
 import Data.List (intercalate, isSuffixOf, sortBy)
+import Data.List.Split (splitOn)
 import Data.Maybe (catMaybes)
 import Data.Ord (comparing)
 import Data.Time
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import PandocParser
 import PandocStream
 import Text.Pandoc
@@ -249,3 +251,32 @@ duplicateStopTag (StopTimeTag p t tz) (StopTimeTag p1 t1 tz1)
             strTz1 = formatTagTime tz1
 duplicateStopTag _ _ =
   error "duplicateStopTag: only two stop tags expected"
+
+togglCsvHeader =
+  "User,Email,Client,Project,Task,Description,"
+  ++ "Billable,Start date,Start time,End date,End time,"
+  ++ "Duration,Tags,Amount ()"
+
+toTogglCsv :: String -> [TimeEntry] -> String
+toTogglCsv email = (++ "\n") . ((togglCsvHeader ++ "\n") ++)
+  . intercalate "\n" . map (toTogglCsvLine email)
+
+quoteStr = intercalate "\\\"" . splitOn "\""
+
+formatTogglDate :: FormatTime t => t -> String
+formatTogglDate = formatTime defaultTimeLocale "%Y-%m-%d"
+formatTogglTime :: FormatTime t => t -> String
+formatTogglTime = formatTime defaultTimeLocale "%T"
+
+diffTime t2 t1 = posixSecondsToUTCTime
+  $ diffUTCTime (zonedTimeToUTC t2) (zonedTimeToUTC t1)
+
+toTogglCsvLine :: String -> TimeEntry -> String
+toTogglCsvLine email te = intercalate "," [
+  email, email, "",
+  quoteStr $ teProject te, "", quoteStr $ teTask te, "No",
+  formatTogglDate $ teStart te, formatTogglTime $ teStart te,
+  formatTogglDate $ teStop  te, formatTogglTime $ teStop  te,
+  formatTogglTime $ diffTime (teStop te) (teStart te),
+  "", ""
+  ]
