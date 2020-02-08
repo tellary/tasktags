@@ -35,6 +35,8 @@ element e = satisfyElement (== e) <?> show e
 isHeaderL l (BlockElement (Header l' _ _)) = l == l'
 isHeaderL _ _                              = False
 
+msgIsHeaderL l = "(Header " ++ show l ++ " _ _)"
+
 isHeaderS s (BlockElement (Header _ _ is)) = s == writeInlines is
 isHeaderS _ _                              = False
 
@@ -42,7 +44,7 @@ isHeader = maybe False (const True) . (blockToHeader =<<) . toBlock
 
 headerL :: Stream s m PandocElement => Int -> ParsecT s u m Block
 headerL l = toBlock
-  =<< satisfyElement (isHeaderL l) <?> "(Header " ++ show l ++ " _ _)"
+  =<< satisfyElement (isHeaderL l) <?> msgIsHeaderL l
 
 headerS :: Stream s m PandocElement => String -> ParsecT s u m Block
 headerS s = toBlock

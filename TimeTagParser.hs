@@ -14,6 +14,25 @@ import Text.Pandoc
 import Text.Parsec
 import Text.Printf (printf)
 
+{-|
+
+> nonHeader n        = < Any pandoc element except header of level n >
+> nonTimeTagElement  = < Any pandoc element that's not a string 
+>                        terminated by "<task-start" or "<task-stop" >
+> dayElement         = < Any pandoc element that
+>                        is nonTimeTagElement and is nonHeader 1 >
+> projectElement     = < Any pandoc element that
+>                        is dayElement and is nonHeader 2 >
+> taskElement        = < Any pandoc element that
+>                        is projectElement and is nonHeader 3 >
+>
+> timeTags        = *dayTimeTags *nonTimeTagElement eof
+> dayTimeTags     = *dayElement     header1 *projectTimeTags
+> projectTimeTags = *projectElement header2 *taskTimeTags
+> taskTimeTags    = *taskElement    header3 *( timeTag | taskElement )
+
+|-}
+
 type Project   = String
 type Task      = String
 type Timestamp = String
@@ -51,36 +70,53 @@ parseTagTime  = parseTimeM False defaultTimeLocale tagTimeFormat
 formatTagTime :: FormatTime t => t -> String
 formatTagTime = formatTime defaultTimeLocale tagTimeFormat
 
-isTagElement     e =
-     isHeaderL 1 e || isHeaderL 2 e || isHeaderL 3 e
-  || maybe False ("<task-start" `isSuffixOf`) s
-  || maybe False ("<task-stop"  `isSuffixOf`) s
-  where s = toStr e
-isNonTagElement  e = not (isTagElement e)
-isDayElement     e = not (isHeaderL 1 e)  && isNonTagElement e
-isProjectElement e = not (isHeaderL 2 e)  && isDayElement e
-isTaskElement    e = not (isHeaderL 3 e)  && isProjectElement e
+msgAnd :: String -> String -> String
+m1 `msgAnd` m2 = printf "%s && %s" m1 m2
 
-nonTagElement, dayElement, projectElement, taskElement
+isTimeStartTagElement e =
+  maybe False ("<task-start" `isSuffixOf`) $ toStr e
+isTimeStopTagElement  e =
+  maybe False ("<task-stop"  `isSuffixOf`) $ toStr e
+isTimeTagElement      e =
+  isTimeStartTagElement e || isTimeStopTagElement e
+isNonTimeTagElement   e = not (isTimeTagElement e)
+msgIsNonTimeTagElement  =
+  "(not (Str \".*<task-start\" || Str \".*<task-stop\"))"
+isDayElement          e = isNonTimeTagElement e   &&      not (isHeaderL 1 e)
+msgIsDayElement         = msgIsNonTimeTagElement `msgAnd` msgIsHeaderL 1
+isProjectElement      e = isDayElement e          &&      not (isHeaderL 2 e)
+msgIsProjectElement     = msgIsDayElement        `msgAnd` msgIsHeaderL 2
+isTaskElement         e = isProjectElement e      &&      not (isHeaderL 3 e)
+msgIsTaskElement        = msgIsProjectElement    `msgAnd` msgIsHeaderL 3
+
+nonTimeTagElement, dayElement, projectElement, taskElement
   :: Stream s m PandocElement => ParsecT s u m PandocElement
-nonTagElement  = satisfyElement isNonTagElement <?> "non-tag element"
-dayElement     = satisfyElement isDayElement <?> "day element"
-projectElement = satisfyElement isProjectElement <?> "project element"
-taskElement    = satisfyElement isTaskElement <?> "task element"
+nonTimeTagElement =
+  satisfyElement isNonTimeTagElement <?> msgIsNonTimeTagElement
+dayElement        =
+  satisfyElement isDayElement        <?> msgIsDayElement
+projectElement    =
+  satisfyElement isProjectElement    <?> msgIsProjectElement
+taskElement       =
+  satisfyElement isTaskElement       <?> msgIsTaskElement
 
 timeTags :: Stream s m PandocElement => ParsecT s u m [TimeTag]
-timeTags = concat <$> many dayTimeTags
+timeTags = do
+  tags <- concat <$> many (try $ dayTimeTags)
+  many nonTimeTagElement
+  eof
+  return tags
 
 dayTimeTags, projectTimeTags
   :: Stream s m PandocElement => ParsecT s u m [TimeTag]
 
 dayTimeTags = do
-  many nonTagElement
+  many dayElement
   headerL 1
   concat <$> many (try $ projectTimeTags)
 
 projectTimeTags = do
-  many dayElement
+  many projectElement
   Header _ _ is2 <- headerL 2
   let project = writeInlines is2
   concat <$> many (try $ taskTimeTags project)
@@ -88,7 +124,7 @@ projectTimeTags = do
 taskTimeTags :: Stream s m PandocElement
   => Project -> ParsecT s u m [TimeTag]
 taskTimeTags project = do
-  many projectElement
+  many taskElement
   Header _ _ is3 <- headerL 3
   let task = writeInlines is3
   catMaybes
@@ -98,10 +134,8 @@ timeTag :: Stream s m PandocElement =>
   String -> String -> ParsecT s u m TimeTag
 timeTag project task = do
   start <-
-        True  <$ satisfyElement
-                 (maybe False ("<task-start" `isSuffixOf`) . toStr)
-    <|> False <$ satisfyElement
-                 (maybe False ("<task-stop" `isSuffixOf`)  . toStr)
+        True  <$ satisfyElement isTimeStartTagElement
+    <|> False <$ satisfyElement isTimeStopTagElement
   inline Space
   Str date' <- anyInline
   date      <- case splitAt 3 date' of
