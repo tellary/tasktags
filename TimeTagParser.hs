@@ -73,6 +73,8 @@ formatTagTime = formatTime defaultTimeLocale tagTimeFormat
 msgAnd :: String -> String -> String
 m1 `msgAnd` m2 = printf "%s && %s" m1 m2
 
+msgIsNonHeaderL l = "not (Header " ++ show l ++ " _ _)"
+
 isTimeStartTagElement e =
   maybe False ("<task-start" `isSuffixOf`) $ toStr e
 isTimeStopTagElement  e =
@@ -83,11 +85,11 @@ isNonTimeTagElement   e = not (isTimeTagElement e)
 msgIsNonTimeTagElement  =
   "(not (Str \".*<task-start\" || Str \".*<task-stop\"))"
 isDayElement          e = isNonTimeTagElement e   &&      not (isHeaderL 1 e)
-msgIsDayElement         = msgIsNonTimeTagElement `msgAnd` msgIsHeaderL 1
+msgIsDayElement         = msgIsNonTimeTagElement `msgAnd` msgIsNonHeaderL 1
 isProjectElement      e = isDayElement e          &&      not (isHeaderL 2 e)
-msgIsProjectElement     = msgIsDayElement        `msgAnd` msgIsHeaderL 2
+msgIsProjectElement     = msgIsDayElement        `msgAnd` msgIsNonHeaderL 2
 isTaskElement         e = isProjectElement e      &&      not (isHeaderL 3 e)
-msgIsTaskElement        = msgIsProjectElement    `msgAnd` msgIsHeaderL 3
+msgIsTaskElement        = msgIsProjectElement    `msgAnd` msgIsNonHeaderL 3
 
 nonTimeTagElement, dayElement, projectElement, taskElement
   :: Stream s m PandocElement => ParsecT s u m PandocElement
@@ -102,7 +104,7 @@ taskElement       =
 
 timeTags :: Stream s m PandocElement => ParsecT s u m [TimeTag]
 timeTags = do
-  tags <- concat <$> many (try $ dayTimeTags)
+  tags <- concat <$> many dayTimeTags
   many nonTimeTagElement
   eof
   return tags
@@ -111,24 +113,21 @@ dayTimeTags, projectTimeTags
   :: Stream s m PandocElement => ParsecT s u m [TimeTag]
 
 dayTimeTags = do
-  many dayElement
-  headerL 1
-  concat <$> many (try $ projectTimeTags)
+  try (many dayElement *> headerL 1)
+  concat <$> many projectTimeTags
 
 projectTimeTags = do
-  many projectElement
-  Header _ _ is2 <- headerL 2
+  Header _ _ is2 <- try (many projectElement *> headerL 2)
   let project = writeInlines is2
-  concat <$> many (try $ taskTimeTags project)
+  concat <$> many (taskTimeTags project)
 
 taskTimeTags :: Stream s m PandocElement
   => Project -> ParsecT s u m [TimeTag]
 taskTimeTags project = do
-  many taskElement
-  Header _ _ is3 <- headerL 3
+  Header _ _ is3 <- try (many taskElement *> headerL 3)
   let task = writeInlines is3
   catMaybes
-    <$> many (Just <$> try (timeTag project task) <|> Nothing <$ taskElement)
+    <$> many (Just <$> timeTag project task <|> Nothing <$ taskElement)
 
 timeTag :: Stream s m PandocElement =>
   String -> String -> ParsecT s u m TimeTag
@@ -149,7 +148,9 @@ timeTag project task = do
   tz        <- case splitAt 5 tz' of
                  (t, "\"/>") -> return t
                  _           ->
-                   fail "Malformed <task-start/> or <task-stop/>"
+                   fail $ printf ("Malformed <task-start/> or <task-stop/>: @ "
+                                  ++ "%s %s")
+                                 date time
   let timestampStr = intercalate " " [date, time, tz]
   timestamp <-
         case parseTagTime timestampStr of

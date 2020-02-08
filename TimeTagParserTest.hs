@@ -46,7 +46,8 @@ tags0 = fromRight undefined
 t3 = assert . (== []) <$> tags0
      <*> pure "No tags after first \"Task A2\" header"
 
-allTags = fromRight undefined . parse timeTags "" <$> testPandocStream
+allTagsEither = parse timeTags "" <$> testPandocStream
+allTags = fromRight undefined <$> allTagsEither
 
 expectedTimeTags =
   [StartTimeTag "Project A" "Task A2" $ tagTime "20180506 12:31:51 -0700",
