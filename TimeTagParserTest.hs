@@ -1,7 +1,8 @@
 import           Control.Exception (assert)
 import           Data.Either (fromLeft, fromRight)
 import           Data.List (isInfixOf)
-import qualified Data.Text as T
+import qualified Data.Text    as T
+import qualified Data.Text.IO as TIO
 import           PandocParser
 import           PandocStream
 import           Text.Pandoc
@@ -10,7 +11,7 @@ import           TimeTagParser
 
 readPandoc = skipReadPandoc 0
 skipReadPandoc d f = fromRight (error $ "Can't read " ++ f)
-  . runPure . readMarkdown def . T.pack <$> readFile f
+  . runPure . readMarkdown def . T.drop d <$> TIO.readFile f
 readPandocStream f = PandocStream <$> readPandoc f
 
 testPandoc = readPandoc "test/test.md"
@@ -124,6 +125,8 @@ testParseErrorH3WithoutH2WithTag =
   ("unexpected InlineElement (Str \"<task-start\")"
      `isInfixOf` show parseErrorH3WithoutH2WithTag)
   "parseErrorH3WithoutH2WithTag"
+
+lifelogEither = parse timeTags "" . PandocStream <$> skipReadPandoc 1026089 "/home/ilya/safeplace/lifelog/lifelog.md"
 
 tests = do
   putStr . unlines =<< sequence [
