@@ -1,5 +1,6 @@
 import           Control.Exception (assert)
-import           Data.Either (fromRight)
+import           Data.Either (fromLeft, fromRight)
+import           Data.List (isInfixOf)
 import qualified Data.Text as T
 import           PandocParser
 import           PandocStream
@@ -7,7 +8,8 @@ import           Text.Pandoc
 import           Text.Parsec
 import           TimeTagParser
 
-readPandoc f = fromRight (error $ "Can't read " ++ f)
+readPandoc = skipReadPandoc 0
+skipReadPandoc d f = fromRight (error $ "Can't read " ++ f)
   . runPure . readMarkdown def . T.pack <$> readFile f
 readPandocStream f = PandocStream <$> readPandoc f
 
@@ -97,6 +99,33 @@ testTogglCsv = do
   exp <- expectedTogglCsv
   return $ assert (csv == exp) "toggl.csv as expected"
 
+h3WithoutH2WithTag =
+     "# 2018-May-06\n"
+  ++ "\n"
+  ++ "### H3 without H2\n"
+  ++ "\n"
+  ++ "<task-start t=\"20180506 12:20:54 -0700\"/>\n"
+  ++ "\n"
+  ++ "H3 without H2 is disallowed if it has a time tag\n"
+  ++ "\n"
+  ++ "## Project A\n"
+  ++ "\n"
+  ++ "### Task A2\n"
+  ++ "\n"
+  ++ "<task-start t=\"20180506 12:31:51 -0700\"/>\n"
+  ++ "\n"
+parseErrorH3WithoutH2WithTag = fromLeft undefined
+  . parse timeTags ""
+  . PandocStream
+  . fromRight undefined
+  . runPure . readMarkdown def . T.pack $ h3WithoutH2WithTag
+testParseErrorH3WithoutH2WithTag =
+  return $ assert
+  ("unexpected InlineElement (Str \"<task-start\")"
+     `isInfixOf` show parseErrorH3WithoutH2WithTag)
+  "parseErrorH3WithoutH2WithTag"
+
 tests = do
   putStr . unlines =<< sequence [
-    t1, t2, t3, t4, testTimeEntries, testTogglCsv]
+    t1, t2, t3, t4, testTimeEntries, testTogglCsv,
+    testParseErrorH3WithoutH2WithTag]

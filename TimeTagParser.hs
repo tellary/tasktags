@@ -279,7 +279,7 @@ duplicateStopTag (StopTimeTag p t tz) (StopTimeTag p1 t1 tz1)
       DifferentProjectDuplicateStopTag
       $ printf (   "Task '%s' of a project '%s' "
                 ++ "is stopped at '%s' while "
-                ++ "task '%s' of a different project '%s still runs "
+                ++ "task '%s' of a different project '%s' still runs "
                 ++ "and will be stopped at '%s'")
                t p strTz t1 p1 strTz1
       where strTz  = formatTagTime tz
