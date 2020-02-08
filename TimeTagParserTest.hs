@@ -126,9 +126,15 @@ testParseErrorH3WithoutH2WithTag =
      `isInfixOf` show parseErrorH3WithoutH2WithTag)
   "parseErrorH3WithoutH2WithTag"
 
-lifelogEither = parse timeTags "" . PandocStream <$> skipReadPandoc 1026089 "/home/ilya/safeplace/lifelog/lifelog.md"
+parseEmailTag = parse emailTag "" $ InlineStream [Str "<task-config-email",Space,Str "s=\"name@example.com\"/>"] []
+testEmailTag = return $ assert
+               (parseEmailTag == Right "name@example.com")
+               "name@example.com parsed"
+
+lifelogEither = parse timeEntries "" . PandocStream <$> skipReadPandoc 1026089 "/home/ilya/safeplace/lifelog/lifelog.md"
+lifelogCSV = toTogglCsv "tellary@gmail.com" . fromRight undefined <$> lifelogEither
 
 tests = do
   putStr . unlines =<< sequence [
     t1, t2, t3, t4, testTimeEntries, testTogglCsv,
-    testParseErrorH3WithoutH2WithTag]
+    testParseErrorH3WithoutH2WithTag, testEmailTag]

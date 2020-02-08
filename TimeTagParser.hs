@@ -65,6 +65,8 @@ instance Eq TimeEntry where
     && (zonedTimeToUTC start1) == (zonedTimeToUTC start2)
     && (zonedTimeToUTC stop1 ) == (zonedTimeToUTC stop2 )
 
+data ConfigTag = EmailTag String
+
 tagTimeFormat = "%Y%m%d %T %z"
 parseTagTime  = parseTimeM False defaultTimeLocale tagTimeFormat
 formatTagTime :: FormatTime t => t -> String
@@ -75,21 +77,23 @@ m1 `msgAnd` m2 = printf "%s && %s" m1 m2
 
 msgIsNonHeaderL l = "not (Header " ++ show l ++ " _ _)"
 
-isTimeStartTagElement e =
-  maybe False ("<task-start" `isSuffixOf`) $ toStr e
-isTimeStopTagElement  e =
-  maybe False ("<task-stop"  `isSuffixOf`) $ toStr e
-isTimeTagElement      e =
+isTagElement tagName e =
+  maybe False (("<" ++ tagName) `isSuffixOf`) $ toStr e
+
+isEmailTagElement      = isTagElement "task-config-email"
+isTimeStartTagElement  = isTagElement "task-start"
+isTimeStopTagElement   = isTagElement "task-stop"
+isTimeTagElement     e =
   isTimeStartTagElement e || isTimeStopTagElement e
-isNonTimeTagElement   e = not (isTimeTagElement e)
-msgIsNonTimeTagElement  =
+isNonTimeTagElement    = not . isTimeTagElement
+msgIsNonTimeTagElement =
   "(not (Str \".*<task-start\" || Str \".*<task-stop\"))"
-isDayElement          e = isNonTimeTagElement e   &&      not (isHeaderL 1 e)
-msgIsDayElement         = msgIsNonTimeTagElement `msgAnd` msgIsNonHeaderL 1
-isProjectElement      e = isDayElement e          &&      not (isHeaderL 2 e)
-msgIsProjectElement     = msgIsDayElement        `msgAnd` msgIsNonHeaderL 2
-isTaskElement         e = isProjectElement e      &&      not (isHeaderL 3 e)
-msgIsTaskElement        = msgIsProjectElement    `msgAnd` msgIsNonHeaderL 3
+isDayElement         e = isNonTimeTagElement e   &&      not (isHeaderL 1 e)
+msgIsDayElement        = msgIsNonTimeTagElement `msgAnd` msgIsNonHeaderL 1
+isProjectElement     e = isDayElement e          &&      not (isHeaderL 2 e)
+msgIsProjectElement    = msgIsDayElement        `msgAnd` msgIsNonHeaderL 2
+isTaskElement        e = isProjectElement e      &&      not (isHeaderL 3 e)
+msgIsTaskElement       = msgIsProjectElement    `msgAnd` msgIsNonHeaderL 3
 
 nonTimeTagElement, dayElement, projectElement, taskElement
   :: Stream s m PandocElement => ParsecT s u m PandocElement
@@ -166,6 +170,18 @@ timeEntries = do
   case toTimeEntries ts of
     Right es -> return es
     Left  err  -> fail $ show err
+
+emailTag :: Stream s m PandocElement => ParsecT s u m String
+emailTag = do
+  satisfyElement isEmailTagElement
+  inline Space
+  Str attr  <- anyInline
+  email     <- case splitOn "\"" attr of
+                 ["s=", a, "/>"] -> return a
+                 _             ->
+                   fail $ printf
+                          "Unexpected task-config-email attribute: %s" attr
+  return email
 
 toTimeEntries :: [TimeTag] -> Either TimeEntryError [TimeEntry]
 toTimeEntries = fmap fst
