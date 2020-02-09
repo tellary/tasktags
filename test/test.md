@@ -21,8 +21,6 @@ H3 without H2 is allowed unless it has no time tags
 
 # 2018-May-07
 
-<task-config-email s="name@example.com"/>
-
 ## Project A
 
 ### Task A2

@@ -91,7 +91,7 @@ testTimeEntries =
   assert . (== expectedTimeEntries)
   <$> loadedTimeEntries <*> pure "test.md time entries are as expected"
 
-togglCsv = toTogglCsv "tellary@gmail.com" <$> loadedTimeEntries
+togglCsv = toTogglCsv "name@example.com" <$> loadedTimeEntries
 
 expectedTogglCsv = readFile "test/toggl.csv"
 
@@ -125,11 +125,6 @@ testParseErrorH3WithoutH2WithTag =
   ("unexpected InlineElement (Str \"<task-start\")"
      `isInfixOf` show parseErrorH3WithoutH2WithTag)
   "parseErrorH3WithoutH2WithTag"
-
-parseEmailTag = parse emailTag "" $ InlineStream [Str "<task-config-email",Space,Str "s=\"name@example.com\"/>"] []
-testEmailTag = return $ assert
-               (parseEmailTag == Right "name@example.com")
-               "name@example.com parsed"
 
 lifelogEither = parse timeEntries "" . PandocStream <$> skipReadPandoc 1026089 "/home/ilya/safeplace/lifelog/lifelog.md"
 lifelogCSV = toTogglCsv "tellary@gmail.com" . fromRight undefined <$> lifelogEither

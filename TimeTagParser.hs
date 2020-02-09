@@ -171,18 +171,6 @@ timeEntries = do
     Right es -> return es
     Left  err  -> fail $ show err
 
-emailTag :: Stream s m PandocElement => ParsecT s u m String
-emailTag = do
-  satisfyElement isEmailTagElement
-  inline Space
-  Str attr  <- anyInline
-  email     <- case splitOn "\"" attr of
-                 ["s=", a, "/>"] -> return a
-                 _             ->
-                   fail $ printf
-                          "Unexpected task-config-email attribute: %s" attr
-  return email
-
 toTimeEntries :: [TimeTag] -> Either TimeEntryError [TimeEntry]
 toTimeEntries = fmap fst
                 . foldr step (Right ([], Nothing))
