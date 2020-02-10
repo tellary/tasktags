@@ -9,9 +9,6 @@ import           Text.Pandoc
 import           Text.Parsec
 import           TimeTagParser
 
-readPandoc = skipReadPandoc 0
-skipReadPandoc d f = fromRight (error $ "Can't read " ++ f)
-  . runPure . readMarkdown def . T.drop d <$> TIO.readFile f
 readPandocStream f = PandocStream <$> readPandoc f
 
 testPandoc = readPandoc "test/test.md"
@@ -132,4 +129,4 @@ lifelogCSV = toTogglCsv "tellary@gmail.com" . fromRight undefined <$> lifelogEit
 tests = do
   putStr . unlines =<< sequence [
     t1, t2, t3, t4, testTimeEntries, testTogglCsv,
-    testParseErrorH3WithoutH2WithTag, testEmailTag]
+    testParseErrorH3WithoutH2WithTag]

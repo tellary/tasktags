@@ -2,17 +2,19 @@
 
 module TimeTagParser where
 
-import Data.List (intercalate, isSuffixOf, sortBy)
-import Data.List.Split (splitOn)
-import Data.Maybe (catMaybes)
-import Data.Ord (comparing)
-import Data.Time
-import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
-import PandocParser
-import PandocStream
-import Text.Pandoc
-import Text.Parsec
-import Text.Printf (printf)
+import           Data.List (intercalate, isSuffixOf, sortBy)
+import           Data.List.Split (splitOn)
+import           Data.Maybe (catMaybes)
+import           Data.Ord (comparing)
+import qualified Data.Text    as T
+import qualified Data.Text.IO as TIO
+import           Data.Time
+import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import           PandocParser
+import           PandocStream
+import           Text.Pandoc
+import           Text.Parsec
+import           Text.Printf (printf)
 
 {-|
 
@@ -319,3 +321,10 @@ toTogglCsvLine email te = intercalate "," [
   formatTogglTime $ diffTime (teStop te) (teStart te),
   "", ""
   ]
+
+readPandoc = skipReadPandoc 0
+skipReadPandoc d f = do
+  e <- runPure . readMarkdown def . T.drop d <$> TIO.readFile f
+  case e of
+    Right p  -> return p
+    Left err -> fail $ show err
