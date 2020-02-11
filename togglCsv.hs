@@ -26,9 +26,12 @@ main = do
                     (progDesc "Generate Toggl CSV out of the IN file")
   e       <- if isJust (email args)
                 then return $ fromJust $ email args
-                else loadEmail (config args)
+                else configEmail (config args)
   p       <- parse timeEntries (input args) . PandocStream
              <$> readPandoc (input args)
+  case emailValidate e of
+    Right _  -> return ()
+    Left err -> fail err
   entries <- case p of
     Right e -> return e
     Left  err -> fail $ show err
