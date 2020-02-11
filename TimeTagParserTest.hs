@@ -49,14 +49,14 @@ allTagsEither = parse timeTags "" <$> testPandocStream
 allTags = fromRight undefined <$> allTagsEither
 
 expectedTimeTags =
-  [StartTimeTag "Project A" "Task A2" $ tagTime "20180506 12:25:50 -0700",
-   StartTimeTag "Project A" "Task A2" $ tagTime "20180506 12:20:54 -0700",
-   StopTimeTag  "Project A" "Task A2" $ tagTime "20180506 12:25:50 -0700",
-   StopTimeTag  "Project A" "Task A2" $ tagTime "20180506 12:41:18 -0700",
-   StartTimeTag "Project A" "Task A3" $ tagTime "20180506 09:00:02 -0700",
-   StopTimeTag  "Project A" "Task A3" $ tagTime "20180506 11:05:00 -0700",
-   StartTimeTag "Project B" "Task B2" $ tagTime "20180506 13:41:02 -0700",
-   StopTimeTag  "Project B" "Task B2" $ tagTime "20180506 14:05:18 -0700"]
+  [StartTimeTag "Project A" "Task A2"     $ tagTime "20180506 12:25:50 -0700",
+   StartTimeTag "Project A" "Task A2"     $ tagTime "20180506 12:20:54 -0700",
+   StopTimeTag  "Project A" "Task A2"     $ tagTime "20180506 12:25:50 -0700",
+   StopTimeTag  "Project A" "Task A2"     $ tagTime "20180506 12:41:18 -0700",
+   StartTimeTag "Project A" "Task \"A3\"" $ tagTime "20180506 09:00:02 -0700",
+   StopTimeTag  "Project A" "Task \"A3\"" $ tagTime "20180506 11:05:00 -0700",
+   StartTimeTag "Project B" "Task B2"     $ tagTime "20180506 13:41:02 -0700",
+   StopTimeTag  "Project B" "Task B2"     $ tagTime "20180506 14:05:18 -0700"]
 
 t4 = assert
      .   (== expectedTimeTags)
@@ -67,7 +67,7 @@ loadedTimeEntriesEither = parse timeEntries "" <$> testPandocStream
 loadedTimeEntries = fromRight undefined <$> loadedTimeEntriesEither
 expectedTimeEntries = [
   TimeEntry
-    "Project A" "Task A3"
+    "Project A" "Task \"A3\""
     (tagTime "20180506 09:00:02 -0700")
     (tagTime "20180506 11:05:00 -0700"),
   TimeEntry

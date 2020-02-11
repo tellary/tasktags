@@ -313,7 +313,7 @@ toTogglCsv :: String -> [TimeEntry] -> String
 toTogglCsv email = (++ "\n") . ((togglCsvHeader ++ "\n") ++)
   . intercalate "\n" . map (toTogglCsvLine email)
 
-quoteStr = intercalate "\\\"" . splitOn "\""
+quoteStr s = "\"" ++ (intercalate "\\\"" . splitOn "\"" $ s) ++ "\""
 
 formatTogglDate :: FormatTime t => t -> String
 formatTogglDate = formatTime defaultTimeLocale "%Y-%m-%d"
