@@ -1,8 +1,6 @@
 import Data.Maybe (fromJust, isJust)
-import Data.Ini (readIniFile)
 import Data.Semigroup ((<>))
 import Options.Applicative
-import System.Directory (getHomeDirectory)
 import PandocStream (PandocStream(PandocStream))
 import Text.Parsec (parse)
 import TaskTagsConfig
@@ -28,7 +26,7 @@ main = do
                     (progDesc "Generate Toggl CSV out of the IN file")
   e       <- if isJust (email args)
                 then return $ fromJust $ email args
-                else emailFromConfig args
+                else loadEmail (config args)
   p       <- parse timeEntries (input args) . PandocStream
              <$> readPandoc (input args)
   entries <- case p of
@@ -37,12 +35,3 @@ main = do
   let o   =  fromJust $ output args <|> Just "toggl.csv"
   let csv =  toTogglCsv e entries
   writeFile o csv
-
-emailFromConfig args = do
-  c <- if isJust (config args)
-       then return $ fromJust $ config args
-       else (++) <$> getHomeDirectory <*> pure "/.tasktags"
-  e <- iniEmail <$> readIniFile c
-  case e of
-    Right e'  -> return e'
-    Left  err -> fail err
