@@ -38,5 +38,9 @@ main = do
     Left  err -> fail $ show err
   let o   =  fromJust $ output args <|> Just "toggl.csv"
   let csv =  toTogglCsv e entries
-  writeFile o csv
-  putStrLn $ printf "'%s' written" o
+  if not $ null entries then
+    do
+      writeFile o csv
+      putStrLn $ printf "'%s' written" o
+    else
+      putStrLn $ printf "No time entries found in '%s'" (input args)
