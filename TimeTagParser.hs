@@ -45,7 +45,18 @@ data TimeTag   =
 
 ttTime (StartTimeTag _ _ zt) = zt
 ttTime (StopTimeTag  _ _ zt) = zt
+
 ttTimeUTC = zonedTimeToUTC . ttTime
+
+ttIsStart (StartTimeTag _ _ _) = True
+ttIsStart (StopTimeTag  _ _ _) = False
+
+ttCompare tt1 tt2 =
+  case comparing ttTimeUTC tt1 tt2 of
+    LT -> LT
+    -- Stop tag goes first (is less)
+    EQ -> comparing ttIsStart tt1 tt2
+    GT -> GT
 
 instance Eq TimeTag where
   (StartTimeTag p1 t1 zt1) == (StartTimeTag p2 t2 zt2) =
@@ -176,7 +187,7 @@ timeEntries = do
 toTimeEntries :: [TimeTag] -> Either TimeEntryError [TimeEntry]
 toTimeEntries = fmap fst
                 . foldr step (Right ([], Nothing))
-                . sortBy (comparing ttTimeUTC)
+                . sortBy ttCompare
   where
     step
       tt@(StartTimeTag _ _ _) (Right (_, Nothing))

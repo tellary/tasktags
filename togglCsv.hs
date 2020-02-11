@@ -3,6 +3,7 @@ import Data.Semigroup ((<>))
 import Options.Applicative
 import PandocStream (PandocStream(PandocStream))
 import Text.Parsec (parse)
+import Text.Printf (printf)
 import TaskTagsConfig
 import TimeTagParser
 
@@ -38,3 +39,4 @@ main = do
   let o   =  fromJust $ output args <|> Just "toggl.csv"
   let csv =  toTogglCsv e entries
   writeFile o csv
+  putStrLn $ printf "'%s' written" o

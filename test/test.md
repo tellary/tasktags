@@ -25,7 +25,7 @@ H3 without H2 is allowed unless it has no time tags
 
 ### Task A2
 
-<task-start t="20180506 12:31:51 -0700"/>
+<task-start t="20180506 12:25:50 -0700"/>
 <task-start t="20180506 12:20:54 -0700"/>
 <task-stop t="20180506 12:25:50 -0700"/>
 <task-stop t="20180506 12:41:18 -0700"/>

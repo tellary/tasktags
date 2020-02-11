@@ -2,7 +2,6 @@ import           Control.Exception (assert)
 import           Data.Either (fromLeft, fromRight)
 import           Data.List (isInfixOf)
 import qualified Data.Text    as T
-import qualified Data.Text.IO as TIO
 import           PandocParser
 import           PandocStream
 import           Text.Pandoc
@@ -21,7 +20,7 @@ tag1 = fromRight undefined . parse (findElement $ timeTag "p" "t") ""
   <$> testPandocStream
 
 t1 = assert
-  .   (== StartTimeTag "p" "t" (tagTime "20180506 12:31:51 -0700"))
+  .   (== StartTimeTag "p" "t" (tagTime "20180506 12:25:50 -0700"))
   <$> tag1 <*> pure "tag1 correct"
 
 tags1Either = parse ((count 2 $ findElement (headerS "Project A"))
@@ -30,7 +29,7 @@ tags1Either = parse ((count 2 $ findElement (headerS "Project A"))
 tags1 = fromRight undefined <$> tags1Either
 
 taskA2Entries =
-  [StartTimeTag "p" "Task A2" $ tagTime "20180506 12:31:51 -0700",
+  [StartTimeTag "p" "Task A2" $ tagTime "20180506 12:25:50 -0700",
    StartTimeTag "p" "Task A2" $ tagTime "20180506 12:20:54 -0700",
    StopTimeTag  "p" "Task A2" $ tagTime "20180506 12:25:50 -0700",
    StopTimeTag  "p" "Task A2" $ tagTime "20180506 12:41:18 -0700"]
@@ -50,7 +49,7 @@ allTagsEither = parse timeTags "" <$> testPandocStream
 allTags = fromRight undefined <$> allTagsEither
 
 expectedTimeTags =
-  [StartTimeTag "Project A" "Task A2" $ tagTime "20180506 12:31:51 -0700",
+  [StartTimeTag "Project A" "Task A2" $ tagTime "20180506 12:25:50 -0700",
    StartTimeTag "Project A" "Task A2" $ tagTime "20180506 12:20:54 -0700",
    StopTimeTag  "Project A" "Task A2" $ tagTime "20180506 12:25:50 -0700",
    StopTimeTag  "Project A" "Task A2" $ tagTime "20180506 12:41:18 -0700",
@@ -77,7 +76,7 @@ expectedTimeEntries = [
     (tagTime "20180506 12:25:50 -0700"),
   TimeEntry
     "Project A" "Task A2"
-    (tagTime "20180506 12:31:51 -0700")
+    (tagTime "20180506 12:25:50 -0700")
     (tagTime "20180506 12:41:18 -0700"),
   TimeEntry
     "Project B" "Task B2"

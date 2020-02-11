@@ -1,5 +1,5 @@
 User,Email,Client,Project,Task,Description,Billable,Start date,Start time,End date,End time,Duration,Tags,Amount ()
 name@example.com,name@example.com,,Project A,,Task A3,No,2018-05-06,09:00:02,2018-05-06,11:05:00,02:04:58,,
 name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:20:54,2018-05-06,12:25:50,00:04:56,,
-name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:31:51,2018-05-06,12:41:18,00:09:27,,
+name@example.com,name@example.com,,Project A,,Task A2,No,2018-05-06,12:25:50,2018-05-06,12:41:18,00:15:28,,
 name@example.com,name@example.com,,Project B,,Task B2,No,2018-05-06,13:41:02,2018-05-06,14:05:18,00:24:16,,
