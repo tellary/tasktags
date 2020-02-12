@@ -10,10 +10,11 @@ import qualified Data.Text    as T
 import qualified Data.Text.IO as TIO
 import           Data.Time
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import           Control.Applicative ((<|>))
 import           PandocParser
 import           PandocStream
 import           Text.Pandoc
-import           Text.Parsec
+import           Text.Parsec hiding ((<|>))
 import           Text.Printf (printf)
 
 {-|
@@ -72,6 +73,8 @@ data TimeEntry = TimeEntry {
   teStop    :: ZonedTime
   } deriving Show
 
+teStartUTC = zonedTimeToUTC . teStart
+
 instance Eq TimeEntry where
   (TimeEntry p1 t1 start1 stop1) == (TimeEntry p2 t2 start2 stop2) =
        p1 == p2 && t1 == t2
@@ -81,6 +84,7 @@ instance Eq TimeEntry where
 data ConfigTag = EmailTag String
 
 tagTimeFormat = "%Y%m%d %T %z"
+parseTagTime  :: (ParseTime t, Monad m) => String -> m t
 parseTagTime  = parseTimeM False defaultTimeLocale tagTimeFormat
 formatTagTime :: FormatTime t => t -> String
 formatTagTime = formatTime defaultTimeLocale tagTimeFormat
@@ -303,6 +307,17 @@ duplicateStopTag (StopTimeTag p t tz) (StopTimeTag p1 t1 tz1)
             strTz1 = formatTagTime tz1
 duplicateStopTag _ _ =
   error "duplicateStopTag: only two stop tags expected"
+
+maybeFilterOn :: Eq a => (a -> b) -> Maybe (b -> Bool) -> [a] -> [a]
+maybeFilterOn on p entries =
+  case p of
+    Just p' -> map snd . filter (p' . fst) $ pairs
+    Nothing -> entries
+  where pairs = map (\e -> (on e, e)) entries
+
+teFilterOnStartUtcBetween ge le =
+    maybeFilterOn teStartUTC ((<=) <$> ge)
+  . maybeFilterOn teStartUTC ((>=) <$> le)
 
 togglCsvHeader =
   "User,Email,Client,Project,Task,Description,"
