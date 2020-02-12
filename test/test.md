@@ -35,6 +35,16 @@ H3 without H2 is allowed unless it has no time tags
 <task-start t="20180506 09:00:02 -0700"/>
 <task-stop t="20180506 11:05:00 -0700"/>
 
+### Task with `code`
+
+<task-start t="20180506 14:06:38 -0700"/>
+<task-stop t="20180506 14:08:02 -0700"/>
+
+### Task with <
+
+<task-start t="20180506 14:08:02 -0700"/>
+<task-stop t="20180506 14:08:04 -0700"/>
+
 ## Project A
 
 ## Project B

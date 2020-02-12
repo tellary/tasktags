@@ -7,6 +7,7 @@ import qualified Data.Map as M
 import qualified Data.Text as T
 import           PandocStream
 import           Text.Pandoc
+import           Text.Pandoc.XML (fromEntities)
 import           Text.Parsec
 
 showElement (BlockElement  b) = "(" ++ show b ++ ")"
@@ -53,10 +54,11 @@ headerS s = toBlock
 anyHeader :: Stream s m PandocElement => ParsecT s u m Block
 anyHeader = blockToHeader =<< toBlock =<< satisfyElement isHeader
 
-writeInlines = T.unpack
+writeInlines = fromEntities
+  . T.unpack
   . fromRight (error "Can't write inlines")
   . runPure
-  . writePlain def
+  . writeMarkdown def
   . Pandoc (Meta M.empty)
   . (:[]) . Plain
 

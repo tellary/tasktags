@@ -55,6 +55,12 @@ expectedTimeTags =
    StopTimeTag  "Project A" "Task A2"     $ tagTime "20180506 12:41:18 -0700",
    StartTimeTag "Project A" "Task \"A3\"" $ tagTime "20180506 09:00:02 -0700",
    StopTimeTag  "Project A" "Task \"A3\"" $ tagTime "20180506 11:05:00 -0700",
+   StartTimeTag "Project A" "Task with `code`"
+    $ tagTime "20180506 14:06:38 -0700",
+   StopTimeTag  "Project A" "Task with `code`"
+    $ tagTime "20180506 14:08:02 -0700",
+   StartTimeTag "Project A" "Task with <" $ tagTime "20180506 14:08:02 -0700",
+   StopTimeTag  "Project A" "Task with <" $ tagTime "20180506 14:08:04 -0700",
    StartTimeTag "Project B" "Task B2"     $ tagTime "20180506 13:41:02 -0700",
    StopTimeTag  "Project B" "Task B2"     $ tagTime "20180506 14:05:18 -0700"]
 
@@ -81,7 +87,15 @@ expectedTimeEntries = [
   TimeEntry
     "Project B" "Task B2"
     (tagTime "20180506 13:41:02 -0700")
-    (tagTime "20180506 14:05:18 -0700")
+    (tagTime "20180506 14:05:18 -0700"),
+  TimeEntry
+    "Project A" "Task with `code`"
+    (tagTime "20180506 14:06:38 -0700")
+    (tagTime "20180506 14:08:02 -0700"),
+  TimeEntry
+    "Project A" "Task with <"
+    (tagTime "20180506 14:08:02 -0700")
+    (tagTime "20180506 14:08:04 -0700")
   ]
 testTimeEntries =
   assert . (== expectedTimeEntries)

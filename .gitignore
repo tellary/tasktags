@@ -2,3 +2,8 @@
 /todo.md
 *.html
 *.pdf
+*.hi
+*.o
+/dist/
+/toggl.csv
+/togglCsv
