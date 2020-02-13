@@ -9,32 +9,44 @@ import TaskTagsConfig
 import TimeTagParser
 
 data TogglCSV = TogglCSV {
-    config      :: Maybe FilePath,
-    email       :: Maybe String,
-    startTimeGE :: Maybe UTCTime,
-    startTimeLE :: Maybe UTCTime,
-    startPos    :: Maybe Int,
-    endPos      :: Maybe Int,
-    input       :: FilePath,
-    output      :: Maybe FilePath
-  } deriving Show
+    config     :: Maybe FilePath,
+    email      :: Maybe String,
+    startTimeP :: [UTCTime -> Bool],
+    startPos   :: Maybe Int,
+    endPos     :: Maybe Int,
+    input      :: FilePath,
+    output     :: Maybe FilePath
+  }
 
 togglCsvArgs =
   TogglCSV
-  <$> optional (strOption (long "config" <> short 'c' <> metavar "CONFIG"))
-  <*> optional (strOption (long "email" <> short 'e' <> metavar "EMAIL"))
-  <*> optional (option time (long "startTimeGE" <> metavar "START_TIME_GE"))
-  <*> optional (option time (long "startTimeLE" <> metavar "START_TIME_LE"))
-  <*> optional (option auto (long "startPos" <> metavar "START_POS"))
-  <*> optional (option auto (long "endPos"   <> metavar "END_POS"  ))
+  <$> optional (strOption    (long "config" <> short 'c' <> metavar "CONFIG"))
+  <*> optional (strOption    (long "email" <> short 'e' <> metavar "EMAIL"))
+  <*> many     (option timeP (long "startTimeP" <> metavar "START_TIME_P"))
+  <*> optional (option auto  (long "startPos" <> metavar "START_POS"))
+  <*> optional (option auto  (long "endPos" <> metavar "END_POS"  ))
   <*> argument str (metavar "IN")
   <*> optional (argument str (metavar "OUT"))
 
-time :: ReadM UTCTime
-time = eitherReader $ \s ->
+parseTimeArg s =
   case parseTagTime s of
     Just t  -> Right t
     Nothing -> Left $ printf "Failed to parse time '%s'" s
+
+timeP :: ReadM (UTCTime -> Bool)
+timeP = eitherReader $ \s ->
+  case s of
+    '<':'=':' ':t -> (\t' -> (<= t')) <$> parseTimeArg t
+    '<':'=':t     -> (\t' -> (<= t')) <$> parseTimeArg t
+    '>':'=':' ':t -> (\t' -> (>= t')) <$> parseTimeArg t
+    '>':'=':t     -> (\t' -> (>= t')) <$> parseTimeArg t
+    '<':' ':t     -> (\t' -> (< t'))  <$> parseTimeArg t
+    '<':t         -> (\t' -> (< t'))  <$> parseTimeArg t
+    '>':' ':t     -> (\t' -> (> t'))  <$> parseTimeArg t
+    '>':t         -> (\t' -> (> t'))  <$> parseTimeArg t
+    _             -> Left $ printf "Failed to parse time predicate '%s'" s
+
+andp ps = \v -> and $ map ($v) ps
 
 main = do
   args    <- execParser
@@ -48,7 +60,7 @@ main = do
   case emailValidate e of
     Right _  -> return ()
     Left err -> fail err
-  entries <- teFilterOnStartUtcBetween (startTimeGE args) (startTimeLE args)
+  entries <- filterOn teStartUTC (andp $ startTimeP args)
     <$> case p of
           Right e   -> return e
           Left  err -> fail $ show err
@@ -59,4 +71,13 @@ main = do
       writeFile o csv
       putStrLn $ printf "'%s' written" o
     else
-      putStrLn $ printf "No time entries found in '%s'" (input args)
+      putStrLn
+      $ maybeAppendEndPos   (endPos   args)
+      $ maybeAppendStartPos (startPos args)
+      $ printf "No time entries found in '%s'" (input args)
+
+maybeAppendStartPos pos str =
+  maybe str (\p -> str ++ (printf ", start pos %i" p)) pos
+
+maybeAppendEndPos pos str =
+  maybe str (\p -> str ++ (printf ", end pos %i" p)) pos

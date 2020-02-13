@@ -194,6 +194,8 @@ from there."
   )
 
 (defun task-from-current-position--find-date (start-pos)
+  (unless (markdown-heading-at-point)
+    (markdown-previous-heading))
   (let ((level (markdown-outline-level)))
     (when (and (bobp) (not (eq 1 level)))
       (error "No date found above position %s" start-pos))
@@ -201,6 +203,19 @@ from there."
         (eq 1 level)
       (markdown-previous-heading)
       (task-from-current-position--find-date start-pos)
+      )
+    )
+  )
+
+(defun task--find-next-date()
+  (unless (markdown-heading-at-point)
+    (markdown-previous-heading))
+  (let ((level (markdown-outline-level)))
+    (unless (eq 1 level)
+      (markdown-next-heading)
+      (unless (eobp)
+        (task--find-next-date)
+        )
       )
     )
   )
@@ -224,8 +239,6 @@ the current position navigates to the task header found
 and returns a task constructed out of the three.
 Finds next task down the current position if the closest
 header above is project or date."
-  (unless (markdown-heading-at-point)
-    (markdown-previous-heading))
   (let ((start-pos (point))
         (level (markdown-outline-level)))
     (task-from-current-position--find-date start-pos)
@@ -294,6 +307,22 @@ It uses `task-first-in-buffer' to find the first task and
     (list
      (equal "start" (match-string-no-properties 1))
      (match-string-no-properties 2))
+    )
+  )
+
+(defun task-time-tag--previous-start ()
+  (when
+      (search-backward-regexp
+       "<task-start +t=\"\\([^\"]+\\)\"/>" nil t)
+    (match-string-no-properties 1)
+    )
+  )
+
+(defun task-time-tag--next-start ()
+  (when
+      (search-forward-regexp
+       "<task-start +t=\"\\([^\"]+\\)\"/>" nil t)
+    (match-string-no-properties 1)
     )
   )
 
@@ -708,14 +737,62 @@ Use region if selected, or report from the current position until end of
 the current buffer."
   (interactive (list (read-string "Output file: " "toggl.csv")))
   (save-buffer)
-  (if (use-region-p)
+  (let* ((begin (region-beginning))
+         (end   (region-end))
+         (startPos
+          (save-excursion
+            (goto-char begin)
+            (task-from-current-position--find-date begin)
+            (point)
+            )
+          )
+         (timeGT
+          (save-excursion
+            (goto-char begin)
+            (task-time-tag--previous-start))
+          )
+         )
+    (if (use-region-p)
+        (let* ((endPos
+                (save-excursion
+                  (goto-char end)
+                  (task--find-next-date)
+                  (point)
+                  )
+                )
+               (timeLT
+                (save-excursion
+                  (goto-char end)
+                  (task-time-tag--next-start)
+                  )
+                )
+               (cmdPos
+                (format
+                 "togglCsv --startPos %s --endPos %s"
+                 (- startPos 1) (- endPos 1)
+                 )
+                )
+               (cmdTimeGT
+                (if timeGT
+                    (format "%s --startTimeP \"> %s\"" cmdPos timeGT)
+                  cmd)
+                )
+               (cmdTimeLT
+                (if timeLT
+                    (format "%s --startTimeP \"< %s\"" cmdTimeGT timeLT)
+                  cmdTimeGT
+                  )
+                )
+               (cmd
+                (concat cmdTimeLT " " (buffer-file-name) " " filename))
+               )
+          (message cmd)
+          (shell-command cmd)
+          )
       (shell-command
-       (format "togglCsv --startPos %s --endPos %s %s %s"
-               (- (region-beginning) 1) (- (region-end) 1)
-               (buffer-file-name) filename))
-    (shell-command
        (format "togglCsv --startPos %s %s %s"
-               (- (point) 1) (buffer-file-name) filename))
+               (- startPos 1) (buffer-file-name) filename))
+      )
     )
   )
 

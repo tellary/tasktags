@@ -308,16 +308,10 @@ duplicateStopTag (StopTimeTag p t tz) (StopTimeTag p1 t1 tz1)
 duplicateStopTag _ _ =
   error "duplicateStopTag: only two stop tags expected"
 
-maybeFilterOn :: Eq a => (a -> b) -> Maybe (b -> Bool) -> [a] -> [a]
-maybeFilterOn on p entries =
-  case p of
-    Just p' -> map snd . filter (p' . fst) $ pairs
-    Nothing -> entries
+filterOn :: (a -> b) -> (b -> Bool) -> [a] -> [a]
+filterOn on p entries =
+  map snd . filter (p . fst) $ pairs
   where pairs = map (\e -> (on e, e)) entries
-
-teFilterOnStartUtcBetween ge le =
-    maybeFilterOn teStartUTC ((<=) <$> ge)
-  . maybeFilterOn teStartUTC ((>=) <$> le)
 
 togglCsvHeader =
   "User,Email,Client,Project,Task,Description,"
