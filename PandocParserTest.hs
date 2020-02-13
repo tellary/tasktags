@@ -48,9 +48,15 @@ t5 = do
     assert (l == 3) "h3 header level is 3",
     assert (writeInlines is == "Task A1") "h3 header is 'Task A1'"]
 
+longInlines = writeInlines [Str "20200212.2:",Space,Str "Parse",Space,Str "entire",Space,Str "days,",Space,Str "use",Space,Str "first",Space,Str "and",Space,Str "last",Space,Str "start",Space,Str "time",Space,Str "as",Space,Str "determined",Space,Str "by",Space,Str "an",Space,Str "Emacs",Space,Str "region"]
+
+testLongInlinesDontWrap =
+  assert ('\n' `notElem` longInlines) "Long inline doesn't wrap"
+
 tests = do
   putStrLn . show =<< t1
   putStrLn =<< t2
   putStrLn =<< t3
   putStrLn =<< t4
   putStrLn . show  =<< t5
+  putStrLn testLongInlinesDontWrap

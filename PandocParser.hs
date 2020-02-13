@@ -58,7 +58,7 @@ writeInlines = fromEntities
   . T.unpack
   . fromRight (error "Can't write inlines")
   . runPure
-  . writeMarkdown def
+  . writeMarkdown (def { writerWrapText = WrapNone })
   . Pandoc (Meta M.empty)
   . (:[]) . Plain
 
