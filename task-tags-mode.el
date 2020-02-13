@@ -706,18 +706,16 @@ resulting CSV there otherwise."
   "Creates Toggl CSV report.
 Use region if selected, or report from the current position until end of
 the current buffer."
-  (interactive "BOutput buffer:")
-  (save-excursion
-    (let ((stream
-           (if (use-region-p)
-               (task-time-tag-stream-from-task-at-pos
-                (region-beginning)
-                (region-end))
-             (task-time-tag-stream-from-task-at-pos (point))
-             )
-           ))
-      (task-time-entries-toggl-csv stream filename)
-      )
+  (interactive (list (read-string "Output file: " "toggl.csv")))
+  (save-buffer)
+  (if (use-region-p)
+      (shell-command
+       (format "togglCsv --startPos %s --endPos %s %s %s"
+               (- (region-beginning) 1) (- (region-end) 1)
+               (buffer-file-name) filename))
+    (shell-command
+       (format "togglCsv --startPos %s %s %s"
+               (- (point) 1) (buffer-file-name) filename))
     )
   )
 

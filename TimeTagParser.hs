@@ -348,9 +348,17 @@ toTogglCsvLine email te = intercalate "," [
   "", ""
   ]
 
-readPandoc = skipReadPandoc 0
-skipReadPandoc d f = do
-  e <- runPure . readMarkdown def . T.drop d <$> TIO.readFile f
+readPandoc = skipReadPandoc 0 Nothing
+skipReadPandoc start len f = do
+  e <- runPure
+       . readMarkdown def
+       . maybe id (\l -> T.take l) len
+       . T.drop start <$> TIO.readFile f
   case e of
     Right p  -> return p
     Left err -> fail $ show err
+
+maybeSkipReadPandoc startPos endPos f =
+  skipReadPandoc start len f
+  where start = maybe 0 id startPos
+        len   = (\end -> end - start) <$> endPos

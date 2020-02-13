@@ -13,6 +13,8 @@ data TogglCSV = TogglCSV {
     email       :: Maybe String,
     startTimeGE :: Maybe UTCTime,
     startTimeLE :: Maybe UTCTime,
+    startPos    :: Maybe Int,
+    endPos      :: Maybe Int,
     input       :: FilePath,
     output      :: Maybe FilePath
   } deriving Show
@@ -22,7 +24,9 @@ togglCsvArgs =
   <$> optional (strOption (long "config" <> short 'c' <> metavar "CONFIG"))
   <*> optional (strOption (long "email" <> short 'e' <> metavar "EMAIL"))
   <*> optional (option time (long "startTimeGE" <> metavar "START_TIME_GE"))
-  <*> optional (option time (long "startTimeLE" <> metavar "START_TIME_LE" ))
+  <*> optional (option time (long "startTimeLE" <> metavar "START_TIME_LE"))
+  <*> optional (option auto (long "startPos" <> metavar "START_POS"))
+  <*> optional (option auto (long "endPos"   <> metavar "END_POS"  ))
   <*> argument str (metavar "IN")
   <*> optional (argument str (metavar "OUT"))
 
@@ -40,7 +44,7 @@ main = do
                 then return $ fromJust $ email args
                 else configEmail (config args)
   p       <- parse timeEntries (input args) . PandocStream
-             <$> readPandoc (input args)
+             <$> maybeSkipReadPandoc (startPos args) (endPos args) (input args)
   case emailValidate e of
     Right _  -> return ()
     Left err -> fail err

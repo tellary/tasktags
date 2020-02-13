@@ -136,7 +136,7 @@ testParseErrorH3WithoutH2WithTag =
      `isInfixOf` show parseErrorH3WithoutH2WithTag)
   "parseErrorH3WithoutH2WithTag"
 
-lifelogEither = parse timeEntries "" . PandocStream <$> skipReadPandoc 1026089 "/home/ilya/safeplace/lifelog/lifelog.md"
+lifelogEither = parse timeEntries "" . PandocStream <$> skipReadPandoc 1026089 Nothing "/home/ilya/safeplace/lifelog/lifelog.md"
 lifelogCSV = toTogglCsv "tellary@gmail.com" . fromRight undefined <$> lifelogEither
 
 tests = do
