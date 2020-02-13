@@ -13,6 +13,8 @@
   )
 
 (defun task--find-prev-date ()
+  (unless (markdown-heading-at-point)
+    (markdown-previous-heading))
   (let ((start-pos (point))
         (level (markdown-outline-level)))
     (when (and (bobp) (not (eq 1 level)))
@@ -69,10 +71,18 @@ the current buffer."
             (point)
             )
           )
-         (timeGT
+         (timeGE
           (save-excursion
             (goto-char begin)
-            (task-time-tag--previous-start))
+            (task-time-tag--next-start))
+          )
+         (cmdStartPos
+          (format "togglCsv --startPos %s" (- startPos 1))
+          )
+         (cmdTimeGE
+          (if timeGE
+              (format "%s --startTimeP \">= %s\"" cmdStartPos timeGE)
+            cmdStartPos)
           )
          )
     (if (use-region-p)
@@ -83,38 +93,31 @@ the current buffer."
                   (point)
                   )
                 )
-               (timeLT
+               (timeLE
                 (save-excursion
                   (goto-char end)
-                  (task-time-tag--next-start)
+                  (task-time-tag--previous-start)
                   )
                 )
-               (cmdPos
-                (format
-                 "togglCsv --startPos %s --endPos %s"
-                 (- startPos 1) (- endPos 1)
-                 )
+               (cmdEndPos
+                (format "%s --endPos %s" cmdTimeGE (- endPos 1))
                 )
-               (cmdTimeGT
-                (if timeGT
-                    (format "%s --startTimeP \"> %s\"" cmdPos timeGT)
-                  cmd)
-                )
-               (cmdTimeLT
-                (if timeLT
-                    (format "%s --startTimeP \"< %s\"" cmdTimeGT timeLT)
-                  cmdTimeGT
+               (cmdTimeLE
+                (if timeLE
+                    (format "%s --startTimeP \"<= %s\"" cmdEndPos timeLE)
+                  cmdEndPos
                   )
                 )
                (cmd
-                (concat cmdTimeLT " " (buffer-file-name) " " filename))
+                (concat cmdTimeLE " " (buffer-file-name) " " filename))
                )
           (message cmd)
           (shell-command cmd)
           )
-      (shell-command
-       (format "togglCsv --startPos %s %s %s"
-               (- startPos 1) (buffer-file-name) filename))
+      (let ((cmd (concat cmdTimeGE " " (buffer-file-name) " " filename)))
+        (message cmd)
+        (shell-command cmd)
+        )
       )
     )
   )
