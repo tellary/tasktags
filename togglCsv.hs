@@ -1,6 +1,6 @@
 import Data.Maybe (fromJust, isJust)
 import Data.Semigroup ((<>))
-import Data.Time (UTCTime)
+import Data.Time (UTCTime, ZonedTime)
 import Options.Applicative
 import PandocStream (PandocStream(PandocStream))
 import Text.Parsec (parse)
@@ -12,6 +12,8 @@ data TogglCSV = TogglCSV {
     config     :: Maybe FilePath,
     email      :: Maybe String,
     startTimeP :: [UTCTime -> Bool],
+    firstTag   :: Maybe ZonedTime,
+    lastTag    :: Maybe ZonedTime,
     startPos   :: Maybe Int,
     endPos     :: Maybe Int,
     ignoreIncompleteLastStartTag :: Bool,
@@ -22,10 +24,12 @@ data TogglCSV = TogglCSV {
 togglCsvArgs =
   TogglCSV
   <$> optional (strOption    (long "config" <> short 'c' <> metavar "CONFIG"))
-  <*> optional (strOption    (long "email" <> short 'e' <> metavar "EMAIL"))
-  <*> many     (option timeP (long "startTimeP" <> metavar "START_TIME_P"))
-  <*> optional (option auto  (long "startPos" <> metavar "START_POS"))
-  <*> optional (option auto  (long "endPos" <> metavar "END_POS"  ))
+  <*> optional (strOption    (long "email"  <> short 'e' <> metavar "EMAIL" ))
+  <*> many     (option timeP (long "startTimeP" <> metavar "START_TIME_P"  ))
+  <*> optional (option time  (long "firstTag"   <> metavar "FIRST_TAG_TIME"))
+  <*> optional (option time  (long "lastTag"    <> metavar "LAST_TAG_TIME" ))
+  <*> optional (option auto  (long "startPos"   <> metavar "START_POS"     ))
+  <*> optional (option auto  (long "endPos"     <> metavar "END_POS"       ))
   <*> switch (long "ignoreIncompleteLastStartTag")
   <*> argument str (metavar "IN")
   <*> optional (argument str (metavar "OUT"))
@@ -35,7 +39,8 @@ parseTimeArg s =
     Just t  -> Right t
     Nothing -> Left $ printf "Failed to parse time '%s'" s
 
-timeP :: ReadM (UTCTime -> Bool)
+time = eitherReader parseTagTime
+
 timeP = eitherReader $ \s ->
   case s of
     '<':'=':' ':t -> (\t' -> (<= t')) <$> parseTimeArg t
@@ -51,40 +56,60 @@ timeP = eitherReader $ \s ->
 andp ps = \v -> and $ map ($v) ps
 
 main = do
-  args    <- execParser
-             $ info (helper <*> togglCsvArgs)
-                    (progDesc "Generate Toggl CSV out of the IN file")
-  e       <- if isJust (email args)
+  args      <- execParser
+               $ info (helper <*> togglCsvArgs)
+                      (progDesc "Generate Toggl CSV out of the IN file")
+  e         <- if isJust (email args)
                 then return $ fromJust $ email args
                 else configEmail (config args)
-  let timeP = (andp $ startTimeP args)
-  let i     = ignoreIncompleteLastStartTag args
-  p       <- parse (timeEntries timeP i) (input args)
-             .   PandocStream
-             <$> maybeSkipReadPandoc
-                 (startPos args) (endPos args)
-                 (input args)
+  let timeP =  (andp $ startTimeP args)
+  p         <- parse timeTags (input args)
+               .   PandocStream
+               <$> maybeSkipReadPandoc
+                   (startPos args) (endPos args)
+                   (input args)
+  tags      <- case p of
+                  Right e   -> return e
+                  Left  err -> fail $ show err
+
   case emailValidate e of
     Right _  -> return ()
     Left err -> fail err
-  entries <- filterOn teStartUTC timeP
-    <$> case p of
-          Right e   -> return e
-          Left  err -> fail $ show err
-  let o   =  fromJust $ output args <|> Just "toggl.csv"
-  let csv =  toTogglCsv e entries
+
+  let i       = ignoreIncompleteLastStartTag args
+  entries <-
+    either (fail . show) return
+    . fmap (filterOn teStartUTC timeP)
+    . toTimeEntries timeP i
+    . tagsBetween (firstTag args) (lastTag  args)
+    $ tags
+
   if not $ null entries then
     do
+      let o   = fromJust $ output args <|> Just "toggl.csv"
+      let csv = toTogglCsv e entries
       writeFile o csv
       putStrLn $ printf "'%s' written" o
     else
       putStrLn
-      $ maybeAppendEndPos   (endPos   args)
-      $ maybeAppendStartPos (startPos args)
+      $ maybeAppendLastTag  args
+      $ maybeAppendFirstTag args
+      $ maybeAppendEndPos   args
+      $ maybeAppendStartPos args
       $ printf "No time entries found in '%s'" (input args)
 
-maybeAppendStartPos pos str =
-  maybe str (\p -> str ++ (printf ", start pos %i" p)) pos
+maybeAppendStartPos args str =
+  maybe str (\p -> str ++ (printf ", start pos %i" p))
+  (startPos args)
 
-maybeAppendEndPos pos str =
-  maybe str (\p -> str ++ (printf ", end pos %i" p)) pos
+maybeAppendEndPos args str =
+  maybe str (\p -> str ++ (printf ", end pos %i" p))
+  (endPos args)
+
+maybeAppendFirstTag args str =
+  maybe str (\p -> str ++ (printf ", first tag '%s'" $ formatTagTime p))
+  (firstTag args)
+
+maybeAppendLastTag args str =
+  maybe str (\p -> str ++ (printf ", last tag '%s'" $ formatTagTime p))
+  (lastTag args)

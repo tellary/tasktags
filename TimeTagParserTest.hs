@@ -136,10 +136,19 @@ testParseErrorH3WithoutH2WithTag =
      `isInfixOf` show parseErrorH3WithoutH2WithTag)
   "parseErrorH3WithoutH2WithTag"
 
+actualTagsBetween = tagsBetween
+                    (Just $ tagTime "20180506 09:00:02 -0700")
+                    (Just $ tagTime "20180506 14:08:02 -0700")
+                    <$> allTags
+
+testCountTagsBetween =
+  assert . (== 4) . length <$> actualTagsBetween
+  <*> pure "tagsBetween count as expected"
+
 lifelogEither = parse (timeEntries (const True) False) "" . PandocStream <$> skipReadPandoc 1026089 Nothing "/home/ilya/safeplace/lifelog/lifelog.md"
 lifelogCSV = toTogglCsv "tellary@gmail.com" . fromRight undefined <$> lifelogEither
 
 tests = do
   putStr . unlines =<< sequence [
     t1, t2, t3, t4, testTimeEntries, testTogglCsv,
-    testParseErrorH3WithoutH2WithTag]
+    testParseErrorH3WithoutH2WithTag, testCountTagsBetween]

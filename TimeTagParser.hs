@@ -181,6 +181,21 @@ timeTag project task = do
     then return $ StartTimeTag project task timestamp
     else return $ StopTimeTag  project task timestamp
 
+tagsBetween firstTag lastTag =
+    maybeTakeBefore lastTag
+  . maybeDropBefore firstTag
+maybeDropBefore firstTag = case firstTag of
+  Just f  -> dropWhile ((/= fUtc) . ttTimeUTC) where fUtc = zonedTimeToUTC f
+  Nothing -> id
+maybeTakeBefore lastTag tags = case lastTag of
+  Just l  ->
+    range t
+    where lUtc = zonedTimeToUTC l
+          (before, t) = span ((/= lUtc) . ttTimeUTC) tags
+          range []    = before
+          range (h:_) = before ++ [h]
+  Nothing -> tags
+
 timeEntries :: Stream s m PandocElement
   => (UTCTime -> Bool)
   -> Bool -- ignoreIncompleteLastStartTag

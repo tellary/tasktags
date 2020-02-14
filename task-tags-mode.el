@@ -40,19 +40,19 @@
     )
   )
 
-(defun task-time-tag--previous-start ()
+(setq task-time-tag--regex "<task-\\(start\\|stop\\) +t=\"\\([^\"]+\\)\"/>")
+
+(defun task-time-tag--next ()
   (when
-      (search-backward-regexp
-       "<task-start +t=\"\\([^\"]+\\)\"/>" nil t)
-    (match-string-no-properties 1)
+      (search-forward-regexp task-time-tag--regex  nil t)
+    (match-string-no-properties 2)
     )
   )
 
-(defun task-time-tag--next-start ()
+(defun task-time-tag--prev ()
   (when
-      (search-forward-regexp
-       "<task-start +t=\"\\([^\"]+\\)\"/>" nil t)
-    (match-string-no-properties 1)
+      (search-backward-regexp task-time-tag--regex  nil t)
+    (match-string-no-properties 2)
     )
   )
 
@@ -74,17 +74,17 @@ the current buffer."
             (point)
             )
           )
-         (timeGE
+         (firstTag
           (save-excursion
             (goto-char begin)
-            (task-time-tag--next-start))
+            (task-time-tag--next))
           )
          (cmdStartPos
           (format "togglCsv --startPos %s" (- startPos 1))
           )
-         (cmdTimeGE
-          (if timeGE
-              (format "%s --startTimeP \">= %s\"" cmdStartPos timeGE)
+         (cmdFirstTag
+          (if firstTag
+              (format "%s --firstTag \"%s\"" cmdStartPos firstTag)
             cmdStartPos)
           )
          )
@@ -96,29 +96,29 @@ the current buffer."
                   (point)
                   )
                 )
-               (timeLE
+               (lastTag
                 (save-excursion
                   (goto-char end)
-                  (task-time-tag--previous-start)
+                  (task-time-tag--prev)
                   )
                 )
                (cmdEndPos
-                (format "%s --endPos %s" cmdTimeGE (- endPos 1))
+                (format "%s --endPos %s" cmdFirstTag (- endPos 1))
                 )
-               (cmdTimeLE
-                (if timeLE
-                    (format "%s --startTimeP \"<= %s\"" cmdEndPos timeLE)
+               (cmdLastTag
+                (if lastTag
+                    (format "%s --lastTag \"%s\"" cmdEndPos lastTag)
                   cmdEndPos
                   )
                 )
                (cmd
-                (concat cmdTimeLE " " (buffer-file-name) " " filename))
+                (concat cmdLastTag " " (buffer-file-name) " " filename))
                )
           (message cmd)
           (shell-command cmd)
           )
       (let ((cmd (concat
-                  cmdTimeGE
+                  cmdFirstTag
                   " --ignoreIncompleteLastStartTag "
                   (buffer-file-name) " " filename)))
         (message cmd)
