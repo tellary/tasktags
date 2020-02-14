@@ -345,7 +345,11 @@ toTogglCsvLine email te = intercalate "," [
 readPandoc = skipReadPandoc 0 Nothing
 skipReadPandoc start len f = do
   e <- runPure
-       . readMarkdown def
+       . readMarkdown
+         (def {
+             readerExtensions = extensionsFromList
+               [Ext_backtick_code_blocks]
+             })
        . maybe id (\l -> T.take l) len
        . T.drop start <$> TIO.readFile f
   case e of

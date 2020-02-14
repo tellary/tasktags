@@ -5,6 +5,15 @@ Project A
 
 ### Task A1
 
+The following should be ignored as it is inside a code block
+
+```markdown
+### H1
+
+<task-start t="20200204 15:53:28 -0800"/>B
+<task-stop t="20200204 15:54:38 -0800"/>
+```
+
 ### Task A2
 
 ## Project B
