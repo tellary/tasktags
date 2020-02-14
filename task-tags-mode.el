@@ -60,7 +60,10 @@
   "Creates Toggl CSV report.
 Use region if selected, or report from the current position until end of
 the current buffer."
-  (interactive (list (read-string "Output file: " "toggl.csv")))
+  (interactive
+   (list
+    (read-string "Output file: "
+                 (format "%s.csv" (file-name-base)))))
   (save-buffer)
   (let* ((begin (region-beginning))
          (end   (region-end))
