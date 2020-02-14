@@ -14,6 +14,7 @@ data TogglCSV = TogglCSV {
     startTimeP :: [UTCTime -> Bool],
     startPos   :: Maybe Int,
     endPos     :: Maybe Int,
+    ignoreIncompleteLastStartTag :: Bool,
     input      :: FilePath,
     output     :: Maybe FilePath
   }
@@ -25,6 +26,7 @@ togglCsvArgs =
   <*> many     (option timeP (long "startTimeP" <> metavar "START_TIME_P"))
   <*> optional (option auto  (long "startPos" <> metavar "START_POS"))
   <*> optional (option auto  (long "endPos" <> metavar "END_POS"  ))
+  <*> switch (long "ignoreIncompleteLastStartTag")
   <*> argument str (metavar "IN")
   <*> optional (argument str (metavar "OUT"))
 
@@ -55,12 +57,17 @@ main = do
   e       <- if isJust (email args)
                 then return $ fromJust $ email args
                 else configEmail (config args)
-  p       <- parse timeEntries (input args) . PandocStream
-             <$> maybeSkipReadPandoc (startPos args) (endPos args) (input args)
+  let timeP = (andp $ startTimeP args)
+  let i     = ignoreIncompleteLastStartTag args
+  p       <- parse (timeEntries timeP i) (input args)
+             .   PandocStream
+             <$> maybeSkipReadPandoc
+                 (startPos args) (endPos args)
+                 (input args)
   case emailValidate e of
     Right _  -> return ()
     Left err -> fail err
-  entries <- filterOn teStartUTC (andp $ startTimeP args)
+  entries <- filterOn teStartUTC timeP
     <$> case p of
           Right e   -> return e
           Left  err -> fail $ show err

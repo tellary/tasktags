@@ -181,21 +181,32 @@ timeTag project task = do
     then return $ StartTimeTag project task timestamp
     else return $ StopTimeTag  project task timestamp
 
-timeEntries :: Stream s m PandocElement => ParsecT s u m [TimeEntry]
-timeEntries = do
+timeEntries :: Stream s m PandocElement
+  => (UTCTime -> Bool)
+  -> Bool -- ignoreIncompleteLastStartTag
+  -> ParsecT s u m [TimeEntry]
+timeEntries p i = do
   ts <- timeTags
-  case toTimeEntries ts of
+  case toTimeEntries p i ts of
     Right es -> return es
     Left  err  -> fail $ show err
 
-toTimeEntries :: [TimeTag] -> Either TimeEntryError [TimeEntry]
-toTimeEntries = fmap fst
+toTimeEntries
+  :: (UTCTime -> Bool)
+  -> Bool -- ignoreIncompleteLastStartTag
+  -> [TimeTag]
+  -> Either TimeEntryError [TimeEntry]
+toTimeEntries p i = fmap fst
                 . foldr step (Right ([], Nothing))
                 . sortBy ttCompare
   where
+    p' = p . ttTimeUTC
     step
-      tt@(StartTimeTag _ _ _) (Right (_, Nothing))
-      = Left $ incompleteLastStartTag tt
+      tt@(StartTimeTag _ _ _) r@(Right (_, Nothing))
+      | not i && p' tt     = Left $ incompleteLastStartTag tt
+      -- This way we don't generate error for a currently
+      -- running task
+      | otherwise = r
     step
       tt@(StopTimeTag _ _ _) (Right (result, Nothing))
       = Right (result, Just tt)

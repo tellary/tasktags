@@ -114,7 +114,10 @@ the current buffer."
           (message cmd)
           (shell-command cmd)
           )
-      (let ((cmd (concat cmdTimeGE " " (buffer-file-name) " " filename)))
+      (let ((cmd (concat
+                  cmdTimeGE
+                  " --ignoreIncompleteLastStartTag "
+                  (buffer-file-name) " " filename)))
         (message cmd)
         (shell-command cmd)
         )

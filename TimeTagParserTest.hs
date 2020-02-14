@@ -69,7 +69,7 @@ t4 = assert
      <$> allTags
      <*> pure "All tags from test.md are as expected"
 
-loadedTimeEntriesEither = parse timeEntries "" <$> testPandocStream
+loadedTimeEntriesEither = parse (timeEntries (const True) False) "" <$> testPandocStream
 loadedTimeEntries = fromRight undefined <$> loadedTimeEntriesEither
 expectedTimeEntries = [
   TimeEntry
@@ -136,7 +136,7 @@ testParseErrorH3WithoutH2WithTag =
      `isInfixOf` show parseErrorH3WithoutH2WithTag)
   "parseErrorH3WithoutH2WithTag"
 
-lifelogEither = parse timeEntries "" . PandocStream <$> skipReadPandoc 1026089 Nothing "/home/ilya/safeplace/lifelog/lifelog.md"
+lifelogEither = parse (timeEntries (const True) False) "" . PandocStream <$> skipReadPandoc 1026089 Nothing "/home/ilya/safeplace/lifelog/lifelog.md"
 lifelogCSV = toTogglCsv "tellary@gmail.com" . fromRight undefined <$> lifelogEither
 
 tests = do
