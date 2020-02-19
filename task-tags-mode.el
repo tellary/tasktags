@@ -12,7 +12,7 @@
     (format "<task-stop t=\"%s\"/>" task-time-format)))
   )
 
-(defun task--find-prev-date ()
+(defun task--find-current-date ()
   (unless (markdown-heading-at-point)
     (markdown-previous-heading))
   (let ((start-pos (point))
@@ -22,19 +22,29 @@
     (unless
         (eq 1 level)
       (markdown-previous-heading)
-      (task--find-prev-date)
+      (task--find-current-date)
       )
     )
   )
 
 (defun task--find-next-date()
-  (unless (markdown-heading-at-point)
-    (markdown-previous-heading))
+  (if (markdown-heading-at-point)
+      (when (eq 1 (markdown-outline-level))
+        ;; We are looking at a date
+        (markdown-next-heading)
+        (task--find-next-date0)
+        )
+    (markdown-next-heading)
+    (task--find-next-date0)
+    )
+)
+
+(defun task--find-next-date0()
   (let ((level (markdown-outline-level)))
     (unless (eq 1 level)
       (markdown-next-heading)
       (unless (eobp)
-        (task--find-next-date)
+        (task--find-next-date0)
         )
       )
     )
@@ -70,7 +80,7 @@ the current buffer."
          (startPos
           (save-excursion
             (goto-char begin)
-            (task--find-prev-date)
+            (task--find-current-date)
             (point)
             )
           )
@@ -125,6 +135,38 @@ the current buffer."
         (shell-command cmd)
         )
       )
+    )
+  )
+
+(defun task-toggl-csv-day (filename)
+  "Creates Toggl CSV report for the day we currently point to."
+  (interactive
+   (list
+    (read-string "Output file: "
+                 (format "%s.csv" (file-name-base)))))
+  (let* ((p (point))
+         (startPos
+          (save-excursion
+            (task--find-current-date)
+            (point)
+            )
+          )
+         (endPos
+          (save-excursion
+            (goto-char p)
+            (task--find-next-date)
+            (point)
+            )
+          )
+         (cmd
+          (format
+           (concat
+            "togglCsv --startPos %s --endPos %s "
+            "--ignoreIncompleteLastStartTag %s %s")
+           (- startPos 1) (- endPos 1) (buffer-file-name) filename))
+         )
+    (message cmd)
+    (shell-command cmd)
     )
   )
 
