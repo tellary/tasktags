@@ -1,5 +1,7 @@
 module MarkdownReport where
 
+import Data.List (groupBy, sortBy)
+import Data.Ord (comparing)
 import Data.Time
 import TimeTag
 
@@ -38,3 +40,20 @@ reportTask date project task (t:ts)
         start    = printStart   t
         stop     = printStop    t
         cont     = reportTask date' project' task' ts
+
+compareByTaskAndTime t1 t2 =
+  case comparing teTask t1 t2 of
+    EQ -> comparing teStartUTC t1 t2
+    r  -> r
+
+teSortByStart = sortBy (comparing teStartUTC)
+
+teSortByStartOfTask =
+  concat . sortBy compareTaskGroups . taskGroups
+  where taskGroups =
+          groupBy (\t1 t2 -> teTask t1 == teTask t2)
+          . sortBy compareByTaskAndTime
+        compareTaskGroups g1 g2 =
+          compare t1 t2
+          where t1 = teStartUTC . head $ g1
+                t2 = teStartUTC . head $ g2

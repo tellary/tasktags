@@ -1,6 +1,5 @@
 import Data.Semigroup ((<>))
 import Data.Time
-import Data.Maybe (isJust)
 import KeepTimeTagParser
 import MarkdownReport
 import Options.Applicative
@@ -27,7 +26,7 @@ main = do
   tz'  <- maybe (zonedTimeZone <$> getZonedTime) return $ tz args
   let out = maybe putStr writeFile $ output args
   let f   = input args
-  es   <- either (fail . show) return
+  es   <- either (fail . show) (return . teSortByStartOfTask)
           . id . parse (keepTimeEntries tz') f
           <$> readFile f
   out =<< markdownReport <$> es
