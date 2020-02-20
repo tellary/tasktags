@@ -6,6 +6,7 @@ import PandocStream (PandocStream(PandocStream))
 import Text.Parsec (parse)
 import Text.Printf (printf)
 import TaskTagsConfig
+import TimeTag
 import TimeTagParser
 
 data TogglCSV = TogglCSV {
