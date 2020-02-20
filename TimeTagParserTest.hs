@@ -4,6 +4,7 @@ import           Data.List (isInfixOf)
 import qualified Data.Text    as T
 import           PandocParser
 import           PandocStream
+import           TimeTag
 import           Text.Pandoc
 import           Text.Parsec
 import           TimeTagParser
