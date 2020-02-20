@@ -6,7 +6,7 @@ import Data.Time hiding (parseTime)
 import Text.Parsec
 import TimeTag
 
-keepNoProject = "(Select correct project)"
+keepNoProject = "(Type correct project names)"
 
 parseDay :: (ParseTime t, Monad m) => String -> m t
 parseDay = parseTimeM False defaultTimeLocale "%Y%m%d"
