@@ -1,3 +1,5 @@
+(setq task-time-format "%Y%m%d %T %z")
+
 (defun task-start()
   (interactive)
   (insert
