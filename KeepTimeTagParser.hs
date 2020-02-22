@@ -26,7 +26,7 @@ keepTimeEntries z = do
 keepHeader :: Stream s m Char => ParsecT s u m Day
 keepHeader = keepDay <* manyTill anyChar newline
 keepDay :: Stream s m Char => ParsecT s u m Day
-keepDay = parseDay =<< count 8 digit <* space
+keepDay = parseDay =<< count 8 digit
 keepTagLine :: Stream s m Char => TimeZone -> Day -> ParsecT s u m [TimeTag]
 keepTagLine z d = do
   ts <- many1 ((,) <$> keepStart <*> keepStop)
@@ -36,7 +36,7 @@ keepTagLine z d = do
   return $ taskTimeTags z d keepNoProject task ts
 
 keepStart, keepStop :: Stream s m Char => ParsecT s u m TimeOfDay
-keepStart = parseTime =<< count 4 digit <* space
+keepStart = parseTime =<< count 4 digit <* spaces
 keepStop  = keepStart
 
 taskTimeTags z d p t ts = concat . map toTags $ ts
