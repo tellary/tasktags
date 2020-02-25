@@ -18,7 +18,8 @@ keepTimeEntries :: Stream s m Char => TimeZone -> ParsecT s u m [TimeEntry]
 keepTimeEntries z = do
   date <- keepHeader
   spaces
-  tags <- concat <$> many (keepTagLine z date)
+  tags <- concat <$> many (keepTaskTags z date)
+  eof
   case toTimeEntries (const True) False tags of
     Right ts -> return ts
     Left  err  -> fail $ show err
@@ -27,11 +28,11 @@ keepHeader :: Stream s m Char => ParsecT s u m Day
 keepHeader = keepDay <* manyTill anyChar newline
 keepDay :: Stream s m Char => ParsecT s u m Day
 keepDay = parseDay =<< count 8 digit
-keepTagLine :: Stream s m Char => TimeZone -> Day -> ParsecT s u m [TimeTag]
-keepTagLine z d = do
-  ts <- many1 ((,) <$> keepStart <*> keepStop)
+keepTaskTags :: Stream s m Char => TimeZone -> Day -> ParsecT s u m [TimeTag]
+keepTaskTags z d = do
+  ts <- many ((,) <$> keepStart <*> keepStop)
   c  <- anyChar
-  cs <- manyTill anyChar (try (() <$ newline) <|> eof)
+  cs <- manyTill anyChar (() <$ newline <* spaces <|> eof)
   let task = c:cs
   return $ taskTimeTags z d keepNoProject task ts
 
