@@ -4,14 +4,14 @@
   (interactive)
   (insert
    (format-time-string
-    (format "<task-start t=\"%s\"/>" task-time-format)))
+    (format "<task-start t=\"%s\"/>\n" task-time-format)))
   )
 
 (defun task-stop()
   (interactive)
   (insert
    (format-time-string
-    (format "<task-stop t=\"%s\"/>" task-time-format)))
+    (format "<task-stop t=\"%s\"/>\n" task-time-format)))
   )
 
 (defun task--find-current-date ()
