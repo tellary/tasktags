@@ -2,20 +2,24 @@
 
 module TimeTagParser where
 
-import           Data.List (intercalate, isSuffixOf)
-import           Data.List.Split (splitOn)
-import           Data.Maybe (catMaybes)
-import qualified Data.Text    as T
-import qualified Data.Text.IO as TIO
+import           Control.Applicative   ((<|>))
+import           Data.List             (intercalate, isSuffixOf)
+import           Data.List.Split       (splitOn)
+import           Data.Maybe            (catMaybes)
+import qualified Data.Text             as T
+import qualified Data.Text.IO          as TIO
 import           Data.Time
 import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
-import           Control.Applicative ((<|>))
 import           PandocParser
 import           PandocStream
+import           Text.Pandoc           (Block (Header),
+                                        Extension (Ext_backtick_code_blocks),
+                                        Inline (Space, Str), def,
+                                        extensionsFromList, readMarkdown,
+                                        readerExtensions, runPure)
 import           TimeTag
-import           Text.Pandoc
-import           Text.Parsec hiding ((<|>))
-import           Text.Printf (printf)
+import           Text.Parsec           hiding ((<|>))
+import           Text.Printf           (printf)
 
 {-|
 

@@ -7,3 +7,6 @@
 /dist/
 /toggl.csv
 /togglCsv
+/keep
+/tasktags.csv
+.DS_Store

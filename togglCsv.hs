@@ -1,25 +1,27 @@
-import Data.Maybe (fromJust, isJust)
-import Data.Semigroup ((<>))
-import Data.Time (UTCTime, ZonedTime)
-import Options.Applicative
-import PandocStream (PandocStream(PandocStream))
-import Text.Parsec (parse)
-import Text.Printf (printf)
+import Data.Maybe          (fromJust, isJust)
+import Data.Semigroup      ((<>))
+import Data.Time           (UTCTime, ZonedTime)
+import Options.Applicative (argument, auto, eitherReader, execParser, helper,
+                            info, long, many, metavar, option, optional,
+                            progDesc, short, str, strOption, switch, (<|>))
+import PandocStream        (PandocStream (PandocStream))
 import TaskTagsConfig
+import Text.Parsec         (parse)
+import Text.Printf         (printf)
 import TimeTag
 import TimeTagParser
 
 data TogglCSV = TogglCSV {
-    config     :: Maybe FilePath,
-    email      :: Maybe String,
-    startTimeP :: [UTCTime -> Bool],
-    firstTag   :: Maybe ZonedTime,
-    lastTag    :: Maybe ZonedTime,
-    startPos   :: Maybe Int,
-    endPos     :: Maybe Int,
+    config                       :: Maybe FilePath,
+    email                        :: Maybe String,
+    startTimeP                   :: [UTCTime -> Bool],
+    firstTag                     :: Maybe ZonedTime,
+    lastTag                      :: Maybe ZonedTime,
+    startPos                     :: Maybe Int,
+    endPos                       :: Maybe Int,
     ignoreIncompleteLastStartTag :: Bool,
-    input      :: FilePath,
-    output     :: Maybe FilePath
+    input                        :: FilePath,
+    output                       :: Maybe FilePath
   }
 
 togglCsvArgs =
