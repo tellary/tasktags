@@ -1,11 +1,17 @@
-module FileTimeEntryParams where
+module FileTimeEntry where
 
+import Data.Maybe          (fromJust, isJust)
 import Data.Time           (UTCTime, ZonedTime)
 import Options.Applicative (argument, auto, eitherReader, execParser, helper,
                             info, long, many, metavar, option, optional,
                             progDesc, short, str, strOption, switch)
+import PandocStream        (PandocStream (PandocStream))
+import TaskTagsConfig      (configEmail, emailValidate)
+import Text.Parsec         (parse)
 import Text.Printf         (printf)
-import TimeTag             (parseTagTime)
+import TimeTag             (parseTagTime, teStartUTC, toTimeEntries)
+import TimeTagParser       (filterOn, maybeSkipReadPandoc, tagsBetween,
+                            timeTags)
 
 data FileTimeEntryParams
   = FileTimeEntryParams
@@ -50,3 +56,30 @@ timeP = eitherReader $ \s ->
     '>':' ':t     -> (\t' -> (> t'))  <$> parseTimeArg t
     '>':t         -> (\t' -> (> t'))  <$> parseTimeArg t
     _             -> Left $ printf "Failed to parse time predicate '%s'" s
+
+andp ps = \v -> and $ map ($v) ps
+
+readTimeEntries params = do
+  e         <- if isJust (email params)
+               then return . fromJust . email $ params
+               else configEmail (config params)
+  let timeP =  (andp . startTimeP $ params)
+  p         <- parse timeTags (input params)
+               .   PandocStream
+               <$> maybeSkipReadPandoc
+                   (startPos params) (endPos params)
+                   (input params)
+  tags      <- case p of
+                  Right e   -> return e
+                  Left  err -> fail $ show err
+
+  case emailValidate e of
+    Right _  -> return ()
+    Left err -> fail err
+
+  let i       = ignoreIncompleteLastStartTag params
+  either (fail . show) (\tes -> return (tes, e))
+    . fmap (filterOn teStartUTC timeP)
+    . toTimeEntries timeP i
+    . tagsBetween (firstTag params) (lastTag params)
+    $ tags
