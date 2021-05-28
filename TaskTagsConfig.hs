@@ -27,3 +27,6 @@ configEmail maybeConfig = do
   case e of
     Right e'  -> return e'
     Left  err -> fail err
+
+class TaskTagsConfig config where
+  fileTogglWorkspace :: config -> String -> Maybe Int

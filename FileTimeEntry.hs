@@ -2,9 +2,8 @@ module FileTimeEntry where
 
 import Data.Maybe          (fromJust, isJust)
 import Data.Time           (UTCTime, ZonedTime)
-import Options.Applicative (argument, auto, eitherReader, execParser, helper,
-                            info, long, many, metavar, option, optional,
-                            progDesc, short, str, strOption, switch)
+import Options.Applicative (argument, auto, eitherReader, long, many, metavar,
+                            option, optional, short, str, strOption, switch)
 import PandocStream        (PandocStream (PandocStream))
 import TaskTagsConfig      (configEmail, emailValidate)
 import Text.Parsec         (parse)
