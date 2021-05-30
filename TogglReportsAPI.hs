@@ -25,17 +25,24 @@ data DetailedReportReq
 data TimeEntry
   = TimeEntry { start :: LocalTime, end :: LocalTime }
 
-class TogglReportsAPI api where
-  detailedReport :: api -> DetailedReportReq -> IO DetailedReport
+type ApiKey = String
 
-getAllPages api req = do
-  entries <- detailedReport api req
+class TogglReportsAPI api where
+  detailedReport :: api -> ApiKey -> DetailedReportReq -> IO DetailedReport
+
+getAllPages pageF p = do
+  entries <- pageF p
   if length entries < 50 -- TODO: Consult with the `per_page` response field
     then return entries
     else do
-      tail <- getAllPages
-              api
-              req { detailedReportPage = detailedReportPage req + 1 }
+      tail <- getAllPages pageF (p + 1)
       return $ entries ++ tail
 
+data TogglReportsAPIImpl
+  = TogglReportsAPIImpl
+  { host :: String
+  , port :: Maybe Int
+  } deriving Show
+
+togglReportsAPI = TogglReportsAPIImpl "api.track.toggl.com" Nothing
 

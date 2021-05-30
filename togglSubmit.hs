@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 import           FileTimeEntry       (FileTimeEntryParams (input),
                                       fileTimeEntryArgs, readTimeEntries)
 import           Options.Applicative (execParser, helper, info, progDesc)
@@ -8,15 +10,15 @@ import qualified Data.Map            as M
 import qualified Data.Set            as S
 import           Data.Time           (LocalTime (localDay),
                                       ZonedTime (zonedTimeToLocalTime))
-import           TaskTagsConfig
-import           TimeTag             (TimeEntry (teStart, teStop))
-import           TimeTag
+import           TaskTagsConfig      (fileTogglWorkspace, togglApiKey)
+import           TimeTag             (TimeEntry (teProject, teStart, teStop, teTask))
 import qualified TogglAPI            as API
 import           TogglReportsAPI     (DateRange (DateRange),
                                       DetailedReportReq (DetailedReportReq),
                                       ReportReq (ReportReq, dateRange,
                                                  workspaceId),
-                                      TimeEntry (start), getAllPages)
+                                      TimeEntry (start), detailedReport,
+                                      getAllPages)
 
 main = undefined
 
@@ -24,10 +26,17 @@ togglSubmit config reportsApi api = do
   params <- execParser
           $ info (helper <*> fileTimeEntryArgs)
                  (progDesc "Submit time entries to Toggl CSV")
-  wid <- case fileTogglWorkspace config (input params) of
-           Just wid -> return wid
-           Nothing  -> do
-             putStrLn ("No workspace configured for file " ++ (input params))
+
+  wid <- fileTogglWorkspace config (input params) >>= \case
+           Right wid -> return wid
+           Left  err -> do
+             putStrLn err
+             exitFailure
+
+  key <- case togglApiKey config of
+           Right key -> return key
+           Left  err  -> do
+             putStrLn err
              exitFailure
 
   (entries, _) <- readTimeEntries $ params
@@ -44,7 +53,9 @@ togglSubmit config reportsApi api = do
                  }
   existingEntries
     <-  S.fromList . map start
-    <$> getAllPages reportsApi (DetailedReportReq req 1)
+    <$> getAllPages
+        (\p -> detailedReport reportsApi key (DetailedReportReq req p))
+        1
 
   let newEntries
         = filter (flip S.notMember existingEntries

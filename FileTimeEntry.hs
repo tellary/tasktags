@@ -5,7 +5,7 @@ import Data.Time           (UTCTime, ZonedTime)
 import Options.Applicative (argument, auto, eitherReader, long, many, metavar,
                             option, optional, short, str, strOption, switch)
 import PandocStream        (PandocStream (PandocStream))
-import TaskTagsConfig      (configEmail, emailValidate)
+import TaskTagsConfig      (configEmail, emailValidate, iniFileConfig)
 import Text.Parsec         (parse)
 import Text.Printf         (printf)
 import TimeTag             (parseTagTime, teStartUTC, toTimeEntries)
@@ -61,7 +61,7 @@ andp ps = \v -> and $ map ($v) ps
 readTimeEntries params = do
   e         <- if isJust (email params)
                then return . fromJust . email $ params
-               else configEmail (config params)
+               else configEmail =<< (iniFileConfig . config $ params)
   let timeP =  (andp . startTimeP $ params)
   p         <- parse timeTags (input params)
                .   PandocStream
