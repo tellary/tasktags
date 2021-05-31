@@ -3,7 +3,7 @@
 import           FileTimeEntry       (FileTimeEntryParams (config, input),
                                       fileTimeEntryArgs, readTimeEntries)
 import           Options.Applicative (execParser, helper, info, progDesc)
-import           System.Exit         (exitFailure)
+import           System.Exit         (exitFailure, exitSuccess)
 import           Text.Printf         (printf)
 
 import           Control.Monad       (forM_, when)
@@ -71,6 +71,11 @@ togglSubmit configF reportsApi api = do
   let newEntries
         = filter (flip S.notMember existingEntries . zonedTimeToUTC . teStart)
           entries
+  when (null newEntries) $ do
+    printf "Found no new time entries in %s" (show range)
+    exitSuccess
+  printf "Found %i new time entries" (length newEntries)
+
   projects 
     <-  M.fromList . map (\p -> (API.name p, API.id p))
     <$> API.listWorkspaceProjects api wid
