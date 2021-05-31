@@ -18,6 +18,7 @@ import           TimeTag             (TimeEntry (teProject, teStart, teStop,
                                                  teTask))
 import qualified TogglAPI            as API
 import           TogglReportsAPI     (DateRange (DateRange),
+                                      DetailedReport(perPage, timeEntries),
                                       DetailedReportReq (DetailedReportReq),
                                       ReportReq (ReportReq, dateRange,
                                                  workspaceId),
@@ -59,7 +60,11 @@ togglSubmit configF reportsApi api = do
   existingEntries
     <-  S.fromList . map (zonedTimeToUTC . start)
     <$> getAllPages
-        (\p -> detailedReport reportsApi key (DetailedReportReq req p))
+        (\p -> do
+            r <- detailedReport
+                 reportsApi key (DetailedReportReq req p)
+            return (timeEntries r, perPage r)
+        )
         1
   printf "Found %i time entries in Toggl in %s\n"
     (S.size existingEntries) (show range)

@@ -5,7 +5,7 @@ module TogglReportsAPI where
 
 import           Control.Lens          ((&), (.~), (?~), (^?))
 import           Data.Aeson            (FromJSON, ToJSON)
-import           Data.Aeson.Lens       (key, _JSON)
+import           Data.Aeson.Lens       (key, _JSON, _Number)
 import qualified Data.ByteString.Char8 as C
 import qualified Data.Text             as T
 import           Data.Time             (Day, ZonedTime)
@@ -33,7 +33,11 @@ data TimeEntry
 instance FromJSON TimeEntry
 instance ToJSON   TimeEntry
 
-type DetailedReport = [TimeEntry]
+data DetailedReport
+  = DetailedReport
+  { timeEntries :: [TimeEntry]
+  , perPage     :: Int
+  } deriving Show
 
 data DetailedReportReq
   = DetailedReportReq
@@ -47,8 +51,8 @@ class TogglReportsAPI api where
   detailedReport :: api -> ApiKey -> DetailedReportReq -> IO DetailedReport
 
 getAllPages pageF p = do
-  entries <- pageF p
-  if length entries < 50 -- TODO: Consult with the `per_page` response field
+  (entries, perPage) <- pageF p
+  if length entries < perPage
     then return entries
     else do
       tail <- getAllPages pageF (p + 1)
@@ -80,8 +84,11 @@ instance TogglReportsAPI TogglReportsAPIImpl where
               ++ maybe "" (\p -> ":" ++ show p) (port impl)
               ++  "/reports/api/v2/details"
     r <- getWith opts url
+    let perPage = case r ^? responseBody . key "per_page" . _Number of
+                    Just perPage -> round perPage
+                    Nothing      -> error "Failed to parse 'per_page'"
     case r ^? responseBody . key "data" . _JSON of
-      Just tes -> return tes
+      Just tes -> return (DetailedReport tes perPage)
       Nothing  -> error "Failed to parse time entries"
 
 test = do
