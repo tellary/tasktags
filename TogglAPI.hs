@@ -25,3 +25,12 @@ class TogglAPI api where
   createTimeEntry :: api -> TimeEntry -> IO ()
   listWorkspaceProjects :: api -> WorkspaceId -> IO [Project]
   
+data TogglAPIImpl
+  = TogglAPIImpl
+  { host :: String
+  , port :: Maybe String
+  } deriving Show
+
+instance TogglAPI TogglAPIImpl where
+
+togglAPI = TogglAPIImpl "api.track.toggl.com" Nothing
