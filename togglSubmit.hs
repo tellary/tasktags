@@ -72,18 +72,18 @@ togglSubmit configF reportsApi api = do
         = filter (flip S.notMember existingEntries . zonedTimeToUTC . teStart)
           entries
   when (null newEntries) $ do
-    printf "Found no new time entries in %s" (show range)
+    printf "Found no new time entries in %s\n" (show range)
     exitSuccess
-  printf "Found %i new time entries" (length newEntries)
+  printf "Found %i new time entries\n" (length newEntries)
 
   projects 
     <-  M.fromList . map (\p -> (API.name p, API.id p))
-    <$> API.listWorkspaceProjects api wid
+    <$> API.listWorkspaceProjects api key wid
         
   let submit e = do
         pid <- case M.lookup (teProject e) projects of
                  Just pid -> return pid
-                 Nothing  -> API.createProject api wid (teProject e)
+                 Nothing  -> API.createProject api key wid (teProject e)
         let timeEntry
               = API.TimeEntry
               { API.description = teTask e
@@ -91,5 +91,5 @@ togglSubmit configF reportsApi api = do
               , API.start       = teStart e
               , API.stop        = teStop e
               }
-        API.createTimeEntry api timeEntry
+        API.createTimeEntry api key timeEntry
   forM_ newEntries submit
