@@ -79,7 +79,7 @@ togglSubmit configF reportsApi api = do
   projects 
     <-  M.fromList . map (\p -> (API.name p, API.id p))
     <$> API.listWorkspaceProjects api key wid
-        
+
   let submit e = do
         pid <- case M.lookup (teProject e) projects of
                  Just pid -> return pid
