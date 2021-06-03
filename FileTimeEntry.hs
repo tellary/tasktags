@@ -8,7 +8,8 @@ import PandocStream        (PandocStream (PandocStream))
 import TaskTagsConfig      (configEmail, emailValidate, iniFileConfig)
 import Text.Parsec         (parse)
 import Text.Printf         (printf)
-import TimeTag             (parseTagTime, teStartUTC, toTimeEntries)
+import TimeTag             (parseTagTime, runEitherFail, teStartUTC,
+                            toTimeEntries)
 import TimeTagParser       (filterOn, maybeSkipReadPandoc, tagsBetween,
                             timeTags)
 
@@ -34,7 +35,7 @@ fileTimeEntryArgs =
   <*> optional (option time  (long "lastTag"    <> metavar "LAST_TAG_TIME" ))
   <*> optional (option auto  (long "startPos"   <> metavar "START_POS"     ))
   <*> optional (option auto  (long "endPos"     <> metavar "END_POS"       ))
-  <*> switch (long "ignoreIncompleteLastStartTag")
+  <*> switch   (long "ignoreIncompleteLastStartTag")
   <*> argument str (metavar "IN")
 
 parseTimeArg s =
@@ -42,7 +43,7 @@ parseTimeArg s =
     Just t  -> Right t
     Nothing -> Left $ printf "Failed to parse time '%s'" s
 
-time = eitherReader parseTagTime
+time = eitherReader (runEitherFail . parseTagTime)
 
 timeP = eitherReader $ \s ->
   case s of

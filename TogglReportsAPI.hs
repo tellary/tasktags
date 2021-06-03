@@ -13,6 +13,7 @@ import           GHC.Generics          (Generic)
 import           Network.Wreq          (auth, basicAuth, defaults, getWith,
                                         param, responseBody)
 import           Prelude               hiding (until)
+import           ZonedTime             ()
 
 data DateRange
   = DateRange

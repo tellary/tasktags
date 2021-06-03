@@ -1,9 +1,14 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module TimeTag where
 
-import Data.List (sortBy)
-import Data.Ord (comparing)
-import Data.Time
-import Text.Printf (printf)
+import Control.Monad.Fail (MonadFail (fail))
+import Data.List          (sortBy)
+import Data.Ord           (comparing)
+import Data.Time          (FormatTime, ParseTime, UTCTime, ZonedTime,
+                           defaultTimeLocale, formatTime, parseTimeM,
+                           zonedTimeToUTC)
+import Text.Printf        (printf)
 
 type Project   = String
 type Task      = String
@@ -50,8 +55,15 @@ instance Eq TimeEntry where
     && (zonedTimeToUTC start1) == (zonedTimeToUTC start2)
     && (zonedTimeToUTC stop1 ) == (zonedTimeToUTC stop2 )
 
+newtype EitherFail a
+  = EitherFail { runEitherFail :: Either String a }
+  deriving (Functor, Applicative, Monad)
+
+instance MonadFail (EitherFail) where
+  fail = EitherFail . Left
+
 tagTimeFormat = "%Y%m%d %T %z"
-parseTagTime  :: (ParseTime t, Monad m) => String -> m t
+parseTagTime  :: (ParseTime t, MonadFail m) => String -> m t
 parseTagTime  = parseTimeM False defaultTimeLocale tagTimeFormat
 formatTagTime :: FormatTime t => t -> String
 formatTagTime = formatTime defaultTimeLocale tagTimeFormat
