@@ -6,7 +6,7 @@ import           Options.Applicative (execParser, helper, info, progDesc)
 import           System.Exit         (exitFailure, exitSuccess)
 import           Text.Printf         (printf)
 
-import           Control.Monad       (forM_, when)
+import           Control.Monad       (foldM_, when)
 import qualified Data.Map            as M
 import qualified Data.Set            as S
 import           Data.Time           (LocalTime (localDay),
@@ -80,10 +80,12 @@ togglSubmit configF reportsApi api = do
     <-  M.fromList . map (\p -> (API.name p, API.id p))
     <$> API.listWorkspaceProjects api key wid
 
-  let submit e = do
-        pid <- case M.lookup (teProject e) projects of
-                 Just pid -> return pid
-                 Nothing  -> API.createProject api key wid (teProject e)
+  let submit projects e = do
+        (pid, projects') <- case M.lookup (teProject e) projects of
+                 Just pid -> return (pid, projects)
+                 Nothing  -> do
+                   pid <- API.createProject api key wid (teProject e)
+                   return (pid, M.insert (teProject e) pid projects)
         let timeEntry
               = API.TimeEntry
               { API.description = teTask e
@@ -92,4 +94,5 @@ togglSubmit configF reportsApi api = do
               , API.stop        = teStop e
               }
         API.createTimeEntry api key timeEntry
-  forM_ newEntries submit
+        return projects'
+  foldM_ submit projects newEntries
