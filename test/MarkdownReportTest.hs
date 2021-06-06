@@ -1,3 +1,5 @@
+module MarkdownReportTest where
+
 import Control.Exception (assert)
 import MarkdownReport
 import qualified KeepTimeTagParserTest as KT

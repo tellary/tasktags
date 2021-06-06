@@ -1,3 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module PandocParserTest where
+
 import           Control.Exception (assert)
 import           Data.Either (fromRight)
 import qualified Data.Text as T
@@ -51,7 +55,7 @@ t5 = do
 longInlines = writeInlines [Str "20200212.2:",Space,Str "Parse",Space,Str "entire",Space,Str "days,",Space,Str "use",Space,Str "first",Space,Str "and",Space,Str "last",Space,Str "start",Space,Str "time",Space,Str "as",Space,Str "determined",Space,Str "by",Space,Str "an",Space,Str "Emacs",Space,Str "region"]
 
 testLongInlinesDontWrap =
-  assert ('\n' `notElem` longInlines) "Long inline doesn't wrap"
+  assert ('\n' `notElem` T.unpack longInlines) "Long inline doesn't wrap"
 
 tests = do
   putStrLn . show =<< t1

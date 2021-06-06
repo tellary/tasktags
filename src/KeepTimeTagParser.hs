@@ -8,10 +8,10 @@ import TimeTag
 
 keepNoProject = "(Type correct project names)"
 
-parseDay :: (ParseTime t, Monad m) => String -> m t
+parseDay :: (ParseTime t, MonadFail m) => String -> m t
 parseDay = parseTimeM False defaultTimeLocale "%Y%m%d"
 
-parseTime :: (ParseTime t, Monad m) => String -> m t
+parseTime :: (ParseTime t, MonadFail m) => String -> m t
 parseTime = parseTimeM False defaultTimeLocale "%H%M"
 
 keepTimeEntries :: Stream s m Char => TimeZone -> ParsecT s u m [TimeEntry]

@@ -1,3 +1,5 @@
+module PandocStreamTest where
+
 import           Data.Either
 import           Data.Maybe
 import qualified Data.Text as T

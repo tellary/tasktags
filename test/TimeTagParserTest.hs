@@ -1,3 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module TimeTagParserTest where
+
 import           Control.Exception (assert)
 import           Data.Either (fromLeft, fromRight)
 import           Data.List (isInfixOf)

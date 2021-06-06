@@ -46,7 +46,7 @@ m1 `msgAnd` m2 = printf "%s && %s" m1 m2
 msgIsNonHeaderL l = "not (Header " ++ show l ++ " _ _)"
 
 isTagElement tagName e =
-  maybe False (("<" ++ tagName) `isSuffixOf`) $ toStr e
+  maybe False (isSuffixOf ("<" ++ tagName) . T.unpack) $ toStr e
 
 isEmailTagElement      = isTagElement "task-config-email"
 isTimeStartTagElement  = isTagElement "task-start"
@@ -91,7 +91,7 @@ dayTimeTags = do
 projectTimeTags = do
   Header _ _ is2 <- try (many projectElement *> headerL 2)
   let project = writeInlines is2
-  concat <$> many (taskTimeTags project)
+  concat <$> many (taskTimeTags $ T.unpack project)
 
 taskTimeTags :: Stream s m PandocElement
   => Project -> ParsecT s u m [TimeTag]
@@ -99,7 +99,8 @@ taskTimeTags project = do
   Header _ _ is3 <- try (many taskElement *> headerL 3)
   let task = writeInlines is3
   catMaybes
-    <$> many (Just <$> timeTag project task <|> Nothing <$ taskElement)
+    <$> many (Just <$> timeTag project (T.unpack task)
+              <|> Nothing <$ taskElement)
 
 timeTag :: Stream s m PandocElement =>
   String -> String -> ParsecT s u m TimeTag
@@ -109,7 +110,7 @@ timeTag project task = do
     <|> False <$ satisfyElement isTimeStopTagElement
   inline Space
   Str date' <- anyInline
-  date      <- case splitAt 3 date' of
+  date      <- case splitAt 3 (T.unpack date') of
                 ("t=\"", d) -> return d
                 _           ->
                   fail "Malformed <task-start/> or <task-stop/>"
@@ -117,13 +118,13 @@ timeTag project task = do
   Str time  <- anyInline
   inline Space
   Str tz'   <- anyInline
-  tz        <- case splitAt 5 tz' of
+  tz        <- case splitAt 5 (T.unpack tz') of
                  (t, "\"/>") -> return t
                  _           ->
                    fail $ printf ("Malformed <task-start/> or <task-stop/>: @ "
                                   ++ "%s %s")
                                  date time
-  let timestampStr = intercalate " " [date, time, tz]
+  let timestampStr = intercalate " " [date, T.unpack time, tz]
   timestamp <-
         case parseTagTime timestampStr of
           Just t  -> return t

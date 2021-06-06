@@ -6,8 +6,9 @@
 *.o
 /dist/
 /toggl.csv
-/togglCsv
 /keep
 /tasktags.csv
 .DS_Store
-/togglSubmit
+/tasktags.cabal
+/.stack-work/
+/stack.yaml.lock

@@ -5,6 +5,7 @@ module PandocParser where
 import           Data.Either (fromRight)
 import qualified Data.Map as M
 import qualified Data.Text as T
+import           Data.Text(Text)
 import           PandocStream
 import           Text.Pandoc
 import           Text.Pandoc.XML (fromEntities)
@@ -47,15 +48,14 @@ headerL :: Stream s m PandocElement => Int -> ParsecT s u m Block
 headerL l = toBlock
   =<< satisfyElement (isHeaderL l) <?> msgIsHeaderL l
 
-headerS :: Stream s m PandocElement => String -> ParsecT s u m Block
+headerS :: Stream s m PandocElement => Text -> ParsecT s u m Block
 headerS s = toBlock
-  =<< satisfyElement (isHeaderS s) <?> "(Header _ _ \"" ++ s ++ "\")"
+  =<< satisfyElement (isHeaderS s) <?> "(Header _ _ \"" ++ (T.unpack s) ++ "\")"
 
 anyHeader :: Stream s m PandocElement => ParsecT s u m Block
 anyHeader = blockToHeader =<< toBlock =<< satisfyElement isHeader
 
 writeInlines = fromEntities
-  . T.unpack
   . fromRight (error "Can't write inlines")
   . runPure
   . writeMarkdown (def { writerWrapText = WrapNone })

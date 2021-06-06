@@ -25,7 +25,6 @@ import           Network.HTTP.Types    (Status (statusCode))
 import           Network.Wreq          (auth, basicAuth, defaults, getWith,
                                         postWith, responseBody)
 import           Text.Printf           (printf)
-import           ZonedTime             ()
 
 data TimeEntry
   = TimeEntry

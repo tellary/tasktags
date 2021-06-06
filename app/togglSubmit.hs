@@ -80,10 +80,13 @@ togglSubmit configF reportsApi api = do
     <-  M.fromList . map (\p -> (API.name p, API.id p))
     <$> API.listWorkspaceProjects api key wid
 
+  putStrLn . show $ projects
+
   let submit projects e = do
         (pid, projects') <- case M.lookup (teProject e) projects of
                  Just pid -> return (pid, projects)
                  Nothing  -> do
+                   printf "Creating project: '%s'" (teProject e)
                    pid <- API.createProject api key wid (teProject e)
                    return (pid, M.insert (teProject e) pid projects)
         let timeEntry
@@ -93,6 +96,7 @@ togglSubmit configF reportsApi api = do
               , API.start       = teStart e
               , API.stop        = teStop e
               }
+        printf "Creating time entry %s" (show e)
         API.createTimeEntry api key timeEntry
         return projects'
   foldM_ submit projects newEntries

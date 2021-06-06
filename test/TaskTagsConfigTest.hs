@@ -1,8 +1,10 @@
+module TaskTagsConfigTest where
+
 import Control.Exception (assert)
 import Data.Ini
 import TaskTagsConfig
 
-tasktagsConfig = readIniFile "test/.tasktags"
+tasktagsConfig = either error id <$> readIniFile "test/.tasktags"
 
 t1 = assert . (== Right "name@example.com")
      <$> iniEmail <$> tasktagsConfig
