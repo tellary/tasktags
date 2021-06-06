@@ -4,7 +4,6 @@ import FileTimeEntry       (FileTimeEntryParams (endPos, firstTag, input,
                             fileTimeEntryArgs, readTimeEntries)
 import Options.Applicative (argument, execParser, helper, info, metavar,
                             optional, progDesc, str, (<|>))
-import PandocStream        (PandocStream (PandocStream))
 import Text.Printf         (printf)
 import TimeTag             (formatTagTime)
 import TimeTagParser       (toTogglCsv)

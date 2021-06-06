@@ -1,15 +1,15 @@
 module MarkdownReport where
 
 import Data.List (groupBy, sortBy)
-import Data.Ord (comparing)
+import Data.Ord  (comparing)
 import Data.Time
 import TimeTag
 
 formatDate = formatTime defaultTimeLocale "%Y-%b-%d"
 
 printDate    = (++ "\n\n") . ("# "   ++) . formatDate . teStart
-printProject = (++ "\n\n") . ("## "  ++) . teProject
-printTask    = (++ "\n\n") . ("### " ++) . teTask
+printProject = (++ "\n\n") . ("## "  ++) . show . teProject
+printTask    = (++ "\n\n") . ("### " ++) . show . teTask
 
 printStart te = "<task-start t=\"" ++ formatTagTime (teStart te) ++ "\"/>\n"
 printStop  te = "<task-stop t=\""  ++ formatTagTime (teStop  te) ++ "\"/>\n"

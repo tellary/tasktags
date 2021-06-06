@@ -2,16 +2,15 @@
 
 module TimeTag where
 
-import Control.Monad.Fail (MonadFail (fail))
-import Data.List          (sortBy)
-import Data.Ord           (comparing)
-import Data.Time          (FormatTime, ParseTime, UTCTime, ZonedTime,
-                           defaultTimeLocale, formatTime, parseTimeM,
-                           zonedTimeToUTC)
-import Text.Printf        (printf)
+import Data.List   (sortBy)
+import Data.Ord    (comparing)
+import Data.Time   (FormatTime, ParseTime, UTCTime, ZonedTime,
+                    defaultTimeLocale, formatTime, parseTimeM, zonedTimeToUTC)
+import Text.Printf (printf)
+import TrimString  (TrimString)
 
-type Project   = String
-type Task      = String
+type Project   = TrimString
+type Task      = TrimString
 type Timestamp = String
 data TimeTag   =
     StartTimeTag Project Task ZonedTime

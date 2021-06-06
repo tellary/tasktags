@@ -18,7 +18,7 @@ import           TimeTag             (TimeEntry (teProject, teStart, teStop,
                                                  teTask))
 import qualified TogglAPI            as API
 import           TogglReportsAPI     (DateRange (DateRange),
-                                      DetailedReport(perPage, timeEntries),
+                                      DetailedReport (perPage, timeEntries),
                                       DetailedReportReq (DetailedReportReq),
                                       ReportReq (ReportReq, dateRange,
                                                  workspaceId),
@@ -80,23 +80,24 @@ togglSubmit configF reportsApi api = do
     <-  M.fromList . map (\p -> (API.name p, API.id p))
     <$> API.listWorkspaceProjects api key wid
 
-  putStrLn . show $ projects
-
   let submit projects e = do
-        (pid, projects') <- case M.lookup (teProject e) projects of
+        (pid, projects') <- case M.lookup (show . teProject $ e) projects of
                  Just pid -> return (pid, projects)
                  Nothing  -> do
-                   printf "Creating project: '%s'" (teProject e)
-                   pid <- API.createProject api key wid (teProject e)
-                   return (pid, M.insert (teProject e) pid projects)
+                   printf "Creating project: '%s'\n" (show . teProject $ e)
+                   pid <- API.createProject api key wid (show . teProject $ e)
+                   return (pid, M.insert (show . teProject $ e) pid projects)
         let timeEntry
               = API.TimeEntry
-              { API.description = teTask e
+              { API.description = show . teTask $ e
               , API.pid         = pid
               , API.start       = teStart e
               , API.stop        = teStop e
               }
-        printf "Creating time entry %s" (show e)
+        printf "Creating time entry %s:%s @ %s\n"
+          (show . teProject $ e)
+          (show . teTask    $ e)
+          (show . teStart   $ e)
         API.createTimeEntry api key timeEntry
         return projects'
   foldM_ submit projects newEntries

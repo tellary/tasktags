@@ -1,10 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module KeepTimeTagParser where
 
-import Data.Time hiding (parseTime)
+import Data.Time   hiding (parseTime)
 import Text.Parsec
 import TimeTag
+import TrimString  (trimString)
 
 keepNoProject = "(Type correct project names)"
 
@@ -34,7 +36,7 @@ keepTaskTags z d = do
   c  <- anyChar
   cs <- manyTill anyChar (() <$ newline <* spaces <|> eof)
   let task = c:cs
-  return $ taskTimeTags z d keepNoProject task ts
+  return $ taskTimeTags z d keepNoProject (trimString task) ts
 
 keepStart, keepStop :: Stream s m Char => ParsecT s u m TimeOfDay
 keepStart = parseTime =<< count 4 digit <* spaces

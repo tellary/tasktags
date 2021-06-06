@@ -17,9 +17,10 @@ import           Text.Pandoc           (Block (Header),
                                         Inline (Space, Str), def,
                                         extensionsFromList, readMarkdown,
                                         readerExtensions, runPure)
-import           TimeTag
 import           Text.Parsec           hiding ((<|>))
 import           Text.Printf           (printf)
+import           TimeTag
+import           TrimString            (trimString)
 
 {-|
 
@@ -91,7 +92,7 @@ dayTimeTags = do
 projectTimeTags = do
   Header _ _ is2 <- try (many projectElement *> headerL 2)
   let project = writeInlines is2
-  concat <$> many (taskTimeTags $ T.unpack project)
+  concat <$> many (taskTimeTags . trimString . T.unpack $ project)
 
 taskTimeTags :: Stream s m PandocElement
   => Project -> ParsecT s u m [TimeTag]
@@ -99,11 +100,11 @@ taskTimeTags project = do
   Header _ _ is3 <- try (many taskElement *> headerL 3)
   let task = writeInlines is3
   catMaybes
-    <$> many (Just <$> timeTag project (T.unpack task)
+    <$> many (Just <$> timeTag project (trimString . T.unpack $ task)
               <|> Nothing <$ taskElement)
 
 timeTag :: Stream s m PandocElement =>
-  String -> String -> ParsecT s u m TimeTag
+  Project -> Task -> ParsecT s u m TimeTag
 timeTag project task = do
   start <-
         True  <$ satisfyElement isTimeStartTagElement
@@ -185,7 +186,8 @@ diffTime t2 t1 = posixSecondsToUTCTime
 toTogglCsvLine :: String -> TimeEntry -> String
 toTogglCsvLine email te = intercalate "," [
   email, email, "",
-  quoteStr $ teProject te, "", quoteStr $ teTask te, "No",
+  quoteStr . show . teProject $ te, "",
+  quoteStr . show . teTask $ te, "No",
   formatTogglDate $ teStart te, formatTogglTime $ teStart te,
   formatTogglDate $ teStop  te, formatTogglTime $ teStop  te,
   formatTogglTime $ diffTime (teStop te) (teStart te),

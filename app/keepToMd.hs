@@ -1,9 +1,8 @@
-import Data.Semigroup ((<>))
 import Data.Time
 import KeepTimeTagParser
 import MarkdownReport
 import Options.Applicative
-import Text.Parsec (parse)
+import Text.Parsec         (parse)
 
 data KeepToMd = KeepToMd {
   tz     :: Maybe TimeZone,
