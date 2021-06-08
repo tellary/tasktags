@@ -30,7 +30,7 @@ main = togglSubmit iniFileConfig togglReportsAPI API.togglAPI
 togglSubmit configF reportsApi api = do
   params <- execParser
           $ info (helper <*> fileTimeEntryArgs)
-                 (progDesc "Submit time entries to Toggl CSV")
+                 (progDesc "Submit time entries to Toggl")
 
   config <- configF . config $ params
   wid <- fileTogglWorkspace config (input params) >>= \case

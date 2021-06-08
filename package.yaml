@@ -26,39 +26,64 @@ dependencies:
 library:
   source-dirs: src
 
+flags:
+  release:
+    default: false
+    manual: true
+
 ghc-options: -Wall -Werror -Wno-missing-signatures -Wno-name-shadowing -Wno-unused-do-bind -Wno-orphans -Wno-type-defaults
+
+_release-exe-ghc-options: &release-exe-ghc-options
+  - -threaded
+  - -rtsopts
+  - -with-rtsopts=-N
+
+_dev-exe-ghc-options: &dev-exe-ghc-options
+  - -threaded
+  - -rtsopts
+  - -with-rtsopts=-N
+  - -dynamic
 
 executables:
   keepToMd:
     main:                keepToMd.hs
     source-dirs:         app
-    ghc-options:
-    - -dynamic
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+    when:
+      condition: flag(release)
+      then:
+        ghc-options:
+          *release-exe-ghc-options
+      else:
+        ghc-options:
+          *dev-exe-ghc-options
     dependencies:
     - tasktags
 
   togglCsv:
     main:                togglCsv.hs
     source-dirs:         app
-    ghc-options:
-    - -dynamic
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+    when:
+      condition: flag(release)
+      then:
+        ghc-options:
+          *release-exe-ghc-options
+      else:
+        ghc-options:
+          *dev-exe-ghc-options
     dependencies:
     - tasktags
 
   togglSubmit:
     main:                togglSubmit.hs
     source-dirs:         app
-    ghc-options:
-    - -dynamic
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+    when:
+      condition: flag(release)
+      then:
+        ghc-options:
+          *release-exe-ghc-options
+      else:
+        ghc-options:
+          *dev-exe-ghc-options
     dependencies:
     - tasktags
 
