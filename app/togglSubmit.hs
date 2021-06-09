@@ -84,7 +84,7 @@ togglSubmit configF reportsApi api = do
         (pid, projects') <- case M.lookup (show . teProject $ e) projects of
                  Just pid -> return (pid, projects)
                  Nothing  -> do
-                   printf "Creating project: '%s'\n" (show . teProject $ e)
+                   printf "Creating project: \"%s\"\n" (show . teProject $ e)
                    pid <- API.createProject api key wid (show . teProject $ e)
                    return (pid, M.insert (show . teProject $ e) pid projects)
         let timeEntry
@@ -94,7 +94,7 @@ togglSubmit configF reportsApi api = do
               , API.start       = teStart e
               , API.stop        = teStop e
               }
-        printf "Creating time entry %s:%s @ %s\n"
+        printf "Creating time entry \"%s:%s @ %s\"\n"
           (show . teProject $ e)
           (show . teTask    $ e)
           (show . teStart   $ e)

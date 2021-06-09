@@ -68,15 +68,7 @@
     )
   )
 
-(defun task-toggl-csv (filename)
-  "Creates Toggl CSV report.
-Use region if selected, or report from the current position until end of
-the current buffer."
-  (interactive
-   (list
-    (read-string "Output file: "
-                 (format "%s.csv" (file-name-base)))))
-  (save-buffer)
+(defun task--collect-args ()
   (let* ((begin (region-beginning))
          (end   (region-end))
          (startPos
@@ -91,12 +83,12 @@ the current buffer."
             (goto-char begin)
             (task-time-tag--next))
           )
-         (cmdStartPos
-          (format "togglCsv --startPos %s" (- startPos 1))
+         (argStr
+          (format "--startPos %s" (- startPos 1))
           )
-         (cmdFirstTag
+         (argStr
           (if firstTag
-              (format "%s --firstTag \"%s\"" cmdStartPos firstTag)
+              (format "%s --firstTag \"%s\"" argStr firstTag)
             cmdStartPos)
           )
          )
@@ -114,29 +106,54 @@ the current buffer."
                   (task-time-tag--prev)
                   )
                 )
-               (cmdEndPos
-                (format "%s --endPos %s" cmdFirstTag (- endPos 1))
+               (argStr
+                (format "%s --endPos %s" argStr (- endPos 1))
                 )
-               (cmdLastTag
+               (argStr
                 (if lastTag
-                    (format "%s --lastTag \"%s\"" cmdEndPos lastTag)
-                  cmdEndPos
+                    (format "%s --lastTag \"%s\"" argStr lastTag)
+                  argStr
                   )
                 )
-               (cmd
-                (concat cmdLastTag " " (buffer-file-name) " " filename))
+               (argStr
+                (concat argStr " " (buffer-file-name)))
                )
-          (message cmd)
-          (shell-command cmd)
+          argStr
           )
-      (let ((cmd (concat
-                  cmdFirstTag
+      (let ((argStr (concat
+                  argStr
                   " --ignoreIncompleteLastStartTag "
-                  (buffer-file-name) " " filename)))
-        (message cmd)
-        (shell-command cmd)
+                  (buffer-file-name))))
+        argStr
         )
       )
+    )
+  )
+
+(defun task-toggl-csv (filename)
+  "Creates Toggl CSV report.
+Uses a region if selected, or reports from the current position until the end of
+the current buffer."
+  (interactive
+   (list
+    (read-string "Output file: "
+                 (format "%s.csv" (file-name-base)))))
+  (save-buffer)
+  (let ((cmd (concat "togglCsv " (task--collect-args) " " filename)))
+    (message cmd)
+    (shell-command cmd)
+    )
+  )
+
+(defun task-toggl-submit ()
+  "Submits time entries to Toggl.
+Uses a region if selected, or reports from the current position until the end of
+the current buffer."
+  (interactive)
+  (save-buffer)
+  (let ((cmd (concat "togglSubmit " (task--collect-args))))
+    (message cmd)
+    (async-shell-command cmd)
     )
   )
 
