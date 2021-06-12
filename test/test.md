@@ -62,3 +62,10 @@ H3 without H2 is allowed unless it has no time tags
 
 <task-start t="20180506 13:41:02 -0700"/>
 <task-stop t="20180506 14:05:18 -0700"/>
+
+## Interview problems
+
+### 12. Problem twelve
+
+<task-start t="20180506 14:28:02 -0700"/>
+<task-stop t="20180506 14:30:08 -0700"/>

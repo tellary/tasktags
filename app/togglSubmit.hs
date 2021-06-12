@@ -94,7 +94,7 @@ togglSubmit configF reportsApi api = do
               , API.start       = teStart e
               , API.stop        = teStop e
               }
-        printf "Creating time entry \"%s:%s @ %s\"\n"
+        printf "Creating time entry \"%s: %s @ %s\"\n"
           (show . teProject $ e)
           (show . teTask    $ e)
           (show . teStart   $ e)

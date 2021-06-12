@@ -2,7 +2,6 @@ module KeepTimeTagParserTest where
 
 import Control.Exception (assert)
 import Data.Either
-import Data.Time
 import KeepTimeTagParser
 import Text.Parsec (parse)
 

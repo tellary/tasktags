@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts  #-}
 
 module PandocParser where
 
@@ -55,7 +56,12 @@ headerS s = toBlock
 anyHeader :: Stream s m PandocElement => ParsecT s u m Block
 anyHeader = blockToHeader =<< toBlock =<< satisfyElement isHeader
 
-writeInlines = fromEntities
+-- I gave up searching through `Markdown(writeMarkdown)` in pandoc-2.11.4
+-- to figure out where does `\.` escaping is coming from.
+-- It seems like it shouldn't happen. I'm just replacing `\.` with `.` here.
+writeInlines
+  = T.replace "\\." "."
+  . fromEntities
   . fromRight (error "Can't write inlines")
   . runPure
   . writeMarkdown (def { writerWrapText = WrapNone })

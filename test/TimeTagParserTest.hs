@@ -67,7 +67,11 @@ expectedTimeTags =
    StartTimeTag "Project A" "Task with <" $ tagTime "20180506 14:08:02 -0700",
    StopTimeTag  "Project A" "Task with <" $ tagTime "20180506 14:08:04 -0700",
    StartTimeTag "Project B" "Task B2"     $ tagTime "20180506 13:41:02 -0700",
-   StopTimeTag  "Project B" "Task B2"     $ tagTime "20180506 14:05:18 -0700"]
+   StopTimeTag  "Project B" "Task B2"     $ tagTime "20180506 14:05:18 -0700",
+   StartTimeTag "Interview problems" "12. Problem twelve"
+    $ tagTime "20180506 14:28:02 -0700",
+   StopTimeTag  "Interview problems" "12. Problem twelve"
+    $ tagTime "20180506 14:30:08 -0700"]
 
 t4 = assert
      .   (== expectedTimeTags)
