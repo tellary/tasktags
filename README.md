@@ -21,6 +21,6 @@ And an example report that includes work on the "Task tags" project may look as 
 
 To submit time entries to Toggl, you position the cursor in a work log Markdown file and run the `task-toggl-submit` command to submit all time entries starting from the cursor position until the end of the file. Alternatively, you can select a text region and run the `task-toggl-submit` command. Here is how it looks:
 
-![](static/20220124_submit.png)
+![](static/20220124_submit.gif)
 
 
