@@ -90,7 +90,7 @@ togglSubmit configF reportsApi api = do
         let timeEntry
               = API.TimeEntry
               { API.description = show . teTask $ e
-              , API.pid         = pid
+              , API.project_id  = pid
               , API.start       = teStart e
               , API.stop        = teStop e
               }
@@ -98,6 +98,6 @@ togglSubmit configF reportsApi api = do
           (show . teProject $ e)
           (show . teTask    $ e)
           (show . teStart   $ e)
-        API.createTimeEntry api key timeEntry
+        API.createTimeEntry api key wid timeEntry
         return projects'
   foldM_ submit projects newEntries
