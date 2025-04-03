@@ -12,3 +12,4 @@
 /tasktags.cabal
 /.stack-work/
 /stack.yaml.lock
+/msg
