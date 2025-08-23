@@ -127,7 +127,7 @@ instance TogglAPI TogglAPIImpl where
           =  "https://" ++ host impl
           ++ maybe "" (\p -> ":" ++ show p) (port impl)
           ++ "/api/v9/workspaces/" ++ show wid ++ "/projects"
-          ++ "?active=both&per_page=200"
+          ++ "?active=both&per_page=2000"
     r <- getWith opts url
     case r ^? responseBody . _JSON of
       Just tes -> return tes
