@@ -45,7 +45,7 @@ togglSubmit configF reportsApi api = do
              putStrLn err
              exitFailure
 
-  (entries, _) <- readTimeEntries $ params
+  (entries, _) <- readTimeEntries params
   when (null entries) $ do
     putStrLn "No entries found"
     exitFailure

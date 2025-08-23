@@ -8,12 +8,12 @@ import           Control.Lens          ((&), (?~), (^?))
 import           Control.Monad         (when)
 import           Data.Aeson            (FromJSON, ToJSON (toJSON),
                                         Value (Object), object, (.=))
+import           Data.Aeson.KeyMap     (fromList, union)
 import           Data.Aeson.Lens       (_JSON, _Null, _Number, key)
 import           Data.Aeson.Types      (Pair)
 import qualified Data.ByteString.Char8 as C
-import           Data.HashMap.Strict   (fromList, union)
 import           Data.Maybe            (fromJust)
-import           Data.Text             as T
+import qualified Data.Text             as T
 import           Data.Time             (ZonedTime, diffUTCTime,
                                         nominalDiffTimeToSeconds,
                                         zonedTimeToUTC)

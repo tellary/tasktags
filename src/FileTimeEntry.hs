@@ -57,7 +57,7 @@ timeP = eitherReader $ \s ->
     '>':t         -> (\t' -> (> t'))  <$> parseTimeArg t
     _             -> Left $ printf "Failed to parse time predicate '%s'" s
 
-andp ps = \v -> and $ map ($v) ps
+andp ps = \v -> and $ map ($ v) ps
 
 readTimeEntries params = do
   e         <- if isJust (email params)
